@@ -55,8 +55,10 @@ public class Parser {
 
             } else if (currentToken().type == Token.Type.PRINT) {
                 eat(Token.Type.PRINT);
+                eat(Token.Type.LEFTBRACKET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
+                eat(Token.Type.RIGHTBRACKET);
                 eat(Token.Type.SEMICOLON);
                 instructions.add(new Instruction(Instruction.OpCode.PRINT, varName));
             } else {
