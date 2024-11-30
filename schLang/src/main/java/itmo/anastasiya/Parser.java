@@ -32,10 +32,27 @@ public class Parser {
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
                 eat(Token.Type.EQUAL);
-                int value = Integer.parseInt(currentToken().value);
-                eat(Token.Type.NUMBER);
-                eat(Token.Type.SEMICOLON);
-                instructions.add(new Instruction(Instruction.OpCode.STORE, varName, value));
+
+                if (currentToken().type == Token.Type.LEFTBRACKET) {
+                    eat(Token.Type.LEFTBRACKET);
+                    List<Integer> values = new ArrayList<>();
+                    while (currentToken().type != Token.Type.RIGHTBRACKET) {
+                        values.add(Integer.parseInt(currentToken().value));
+                        eat(Token.Type.NUMBER);
+                        if (currentToken().type == Token.Type.COMMA) {
+                            eat(Token.Type.COMMA);
+                        }
+                    }
+                    eat(Token.Type.RIGHTBRACKET);
+                    eat(Token.Type.SEMICOLON);
+                    instructions.add(new Instruction(Instruction.OpCode.ARRAY, varName, values));
+                } else {
+                    int value = Integer.parseInt(currentToken().value);
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.SEMICOLON);
+                    instructions.add(new Instruction(Instruction.OpCode.STORE, varName, value));
+                }
+
             } else if (currentToken().type == Token.Type.PRINT) {
                 eat(Token.Type.PRINT);
                 String varName = currentToken().value;

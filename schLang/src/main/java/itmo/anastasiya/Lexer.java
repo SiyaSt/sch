@@ -68,6 +68,15 @@ public class Lexer {
             } else if (currentChar == ';') {
                 tokens.add(new Token(Token.Type.SEMICOLON, ";"));
                 advance();
+            } else if (currentChar == '[') {
+                    tokens.add(new Token(Token.Type.LEFTBRACKET, "["));
+                    advance();
+            } else if (currentChar == ']') {
+                    tokens.add(new Token(Token.Type.RIGHTBRACKET, "]"));
+                    advance();
+            } else if (currentChar == ',') {
+                    tokens.add(new Token(Token.Type.COMMA, ","));
+                    advance();
             } else {
                 throw new RuntimeException("Unexpected character: " + currentChar);
             }

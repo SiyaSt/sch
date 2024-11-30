@@ -3,14 +3,11 @@ package itmo.anastasiya;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VirtualMachine {
     private List<Instruction> instructions = new ArrayList<>();
-    private Map<String, Integer> variables = new HashMap<>();
+    private Map<String, Object> variables = new HashMap<>();
 
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
@@ -37,6 +34,14 @@ public class VirtualMachine {
                         throw new RuntimeException("Variable not found: " + instruction.operand1);
                     }
                 }
+
+                case ARRAY -> {
+                    String varName = instruction.operand1;
+                    @SuppressWarnings("unchecked")
+                    List<Integer> values = (List<Integer>) instruction.value;
+                    variables.put(varName, values);
+                }
+
                 default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
             }
         }
