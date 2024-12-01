@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    private List<Token> tokens;
+    private final List<Token> tokens;
     private int pos;
 
     public Parser(List<Token> tokens) {
@@ -33,26 +33,57 @@ public class Parser {
                 eat(Token.Type.IDENTIFIER);
                 eat(Token.Type.EQUAL);
 
-                if (currentToken().type == Token.Type.LEFTBRACKET) {
-                    eat(Token.Type.LEFTBRACKET);
-                    List<Integer> values = new ArrayList<>();
-                    while (currentToken().type != Token.Type.RIGHTBRACKET) {
-                        values.add(Integer.parseInt(currentToken().value));
-                        eat(Token.Type.NUMBER);
-                        if (currentToken().type == Token.Type.COMMA) {
-                            eat(Token.Type.COMMA);
-                        }
+
+                if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
+                    Object operand1 = currentToken().value;
+                    eat(currentToken().type);
+
+
+                    if (currentToken().type == Token.Type.PLUS) {
+                        eat(Token.Type.PLUS);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.ADD, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.MINUS) {
+                        eat(Token.Type.MINUS);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.SUB, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.STAR) {
+                        eat(Token.Type.STAR);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.MUL, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.LESS) {
+                        eat(Token.Type.LESS);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.LESS, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.GREATER) {
+                        eat(Token.Type.GREATER);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.GREATER, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.EQUALS) {
+                        eat(Token.Type.EQUALS);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.EQUALS, varName, operand1, operand2));
+                    } else if (currentToken().type == Token.Type.NOT_EQUALS) {
+                        eat(Token.Type.NOT_EQUALS);
+                        Object operand2 = currentToken().value;
+                        eat(currentToken().type);
+                        instructions.add(new Instruction(Instruction.OpCode.NOT_EQUALS, varName, operand1, operand2));
+                    } else {
+
+                        instructions.add(new Instruction(Instruction.OpCode.STORE, varName, operand1));
                     }
-                    eat(Token.Type.RIGHTBRACKET);
-                    eat(Token.Type.SEMICOLON);
-                    instructions.add(new Instruction(Instruction.OpCode.ARRAY, varName, values));
                 } else {
-                    int value = Integer.parseInt(currentToken().value);
-                    eat(Token.Type.NUMBER);
-                    eat(Token.Type.SEMICOLON);
-                    instructions.add(new Instruction(Instruction.OpCode.STORE, varName, value));
+
+                    throw new RuntimeException("Invalid expression after '='");
                 }
 
+                eat(Token.Type.SEMICOLON);
             } else if (currentToken().type == Token.Type.PRINT) {
                 eat(Token.Type.PRINT);
                 eat(Token.Type.LEFTBRACKET);

@@ -7,8 +7,8 @@ public class Main {
 
         String code = """
             let a = 10;
-            let b = 5;
-            print [b];
+            let с = a + 1;
+            print [с];
         """;
 
         // Лексер

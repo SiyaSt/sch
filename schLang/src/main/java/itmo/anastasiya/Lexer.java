@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Lexer {
-    private String input;
+    private final String input;
     private int pos;
     private char currentChar;
 
@@ -17,6 +17,10 @@ public class Lexer {
     private void advance() {
         pos++;
         currentChar = pos < input.length() ? input.charAt(pos) : '\0';
+    }
+
+    private char peekNext() {
+        return pos + 1 < input.length() ? input.charAt(pos + 1) : '\0';
     }
 
     private void skipWhitespace() {
@@ -60,23 +64,48 @@ public class Lexer {
                     tokens.add(new Token(Token.Type.IDENTIFIER, id));
                 }
             } else if (currentChar == '=') {
-                tokens.add(new Token(Token.Type.EQUAL, "="));
+                if (peekNext() == '=') {
+                    tokens.add(new Token(Token.Type.EQUALS, "=="));
+                    advance();
+                } else {
+                    tokens.add(new Token(Token.Type.EQUAL, "="));
+                }
                 advance();
             } else if (currentChar == '+') {
                 tokens.add(new Token(Token.Type.PLUS, "+"));
+                advance();
+            } else if (currentChar == '-') {
+                tokens.add(new Token(Token.Type.MINUS, "-"));
+                advance();
+            } else if (currentChar == '*') {
+                tokens.add(new Token(Token.Type.STAR, "*"));
+                advance();
+            } else if (currentChar == '<') {
+                tokens.add(new Token(Token.Type.LESS, "<"));
+                advance();
+            } else if (currentChar == '>') {
+                tokens.add(new Token(Token.Type.GREATER, ">"));
                 advance();
             } else if (currentChar == ';') {
                 tokens.add(new Token(Token.Type.SEMICOLON, ";"));
                 advance();
             } else if (currentChar == '[') {
-                    tokens.add(new Token(Token.Type.LEFTBRACKET, "["));
-                    advance();
+                tokens.add(new Token(Token.Type.LEFTBRACKET, "["));
+                advance();
             } else if (currentChar == ']') {
-                    tokens.add(new Token(Token.Type.RIGHTBRACKET, "]"));
-                    advance();
+                tokens.add(new Token(Token.Type.RIGHTBRACKET, "]"));
+                advance();
             } else if (currentChar == ',') {
-                    tokens.add(new Token(Token.Type.COMMA, ","));
+                tokens.add(new Token(Token.Type.COMMA, ","));
+                advance();
+            } else if (currentChar == '!') {
+                if (peekNext() == '=') {
+                    tokens.add(new Token(Token.Type.NOT_EQUALS, "!="));
                     advance();
+                    advance();
+                } else {
+                    throw new RuntimeException("Unexpected character: !");
+                }
             } else {
                 throw new RuntimeException("Unexpected character: " + currentChar);
             }
