@@ -7,7 +7,7 @@ public class Main {
 
         String code = """
             let a = 10;
-            let с = a + 1;
+            let с = a > 1;
             print [с];
         """;
 
