@@ -56,12 +56,11 @@ public class Lexer {
                 tokens.add(new Token(Token.Type.NUMBER, collectNumber()));
             } else if (Character.isLetter(currentChar)) {
                 String id = collectIdentifier();
-                if (id.equals("let")) {
-                    tokens.add(new Token(Token.Type.LET, id));
-                } else if (id.equals("print")) {
-                    tokens.add(new Token(Token.Type.PRINT, id));
-                } else {
-                    tokens.add(new Token(Token.Type.IDENTIFIER, id));
+                switch (id) {
+                    case "let" -> tokens.add(new Token(Token.Type.LET, id));
+                    case "print" -> tokens.add(new Token(Token.Type.PRINT, id));
+                    case "if" -> tokens.add(new Token(Token.Type.IF, id));
+                    default -> tokens.add(new Token(Token.Type.IDENTIFIER, id));
                 }
             } else if (currentChar == '=') {
                 if (peekNext() == '=') {
