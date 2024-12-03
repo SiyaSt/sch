@@ -7,9 +7,9 @@ public class Main {
 
         String code = """
             let a = 10;
-            let c = a + 1;
+            let c = 10;
             print [c];
-            if [ c != a ]
+            if [ c == a ]
             [ print [c]; ]
         """;
 

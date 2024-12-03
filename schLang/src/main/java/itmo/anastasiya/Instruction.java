@@ -1,8 +1,9 @@
 package itmo.anastasiya;
 
-class Instruction {
+import java.util.List;
+
+public class Instruction {
     public enum OpCode {
-        STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, FUN, RETURN
         STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, IF
     }
 
@@ -10,8 +11,11 @@ class Instruction {
     public String operand1;
     public Object operand2;
     public Object operand3;
-    public List<String> parameters;
+    public List<Instruction> block;
 
+    public Instruction(OpCode opCode, String operand1) {
+        this(opCode, operand1, null, null, null);
+    }
 
     public Instruction(OpCode opCode, String operand1, Object operand2) {
         this(opCode, operand1, operand2, null, null);
@@ -37,6 +41,7 @@ class Instruction {
     public String toString() {
         return opCode + " " + operand1 +
                 (operand2 != null ? " " + operand2 : "") +
-                (operand3 != null ? " " + operand3 : "");
+                (operand3 != null ? " " + operand3 : "") +
+                (block != null ? " " + block : "");
     }
 }
