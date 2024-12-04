@@ -9,11 +9,44 @@ public class VirtualMachine {
     private final List<Instruction> instructions = new ArrayList<>();
     private final Map<String, Object> variables = new HashMap<>();
 
+    // для функций
+    private final Map<String, Instruction> functions = new HashMap<>();
+    // для возвращаемых значений
+    private final Map<String, Object> functionReturnValues = new HashMap<>();
+
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
             while (in.available() > 0) {
                 int opCodeOrdinal = in.readByte(); // Считываем код операции
                 Instruction.OpCode opCode = Instruction.OpCode.values()[opCodeOrdinal];
+
+
+                switch (opCode) {
+                    case FUN:
+                        String functionName = in.readUTF();
+                        int parameterCount = in.readInt();
+                        List<String> parameters = new ArrayList<>();
+                        for (int i = 0; i < parameterCount; i++) {
+                            parameters.add(in.readUTF());
+                        }
+
+                        Instruction functionInstruction = new Instruction(
+                                Instruction.OpCode.FUN,
+                                functionName,
+                                parameters
+                        );
+                        functions.put(functionName, functionInstruction);
+                        continue;
+
+                    case RETURN:
+                        String returnValue = in.readUTF();
+                        Instruction returnInstruction = new Instruction(
+                                Instruction.OpCode.RETURN,
+                                returnValue
+                        );
+                        instructions.add(returnInstruction);
+                        continue;
+                }
 
                 String operand1 = in.readUTF();
                 String operand2 = in.readUTF();
@@ -160,6 +193,17 @@ public class VirtualMachine {
                     if (condition && instruction.block != null) {
                         run(instruction.block);
                     }
+                }
+
+                case FUN -> {
+                    // Функции уже загружены в `functions` при чтении файла
+                }
+
+                case RETURN -> {
+                    functionReturnValues.put(
+                            "lastReturn",
+                            getOperandValue(instruction.operand1)
+                    );
                 }
                 default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
             }

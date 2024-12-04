@@ -3,8 +3,8 @@ package itmo.anastasiya;
 class Token {
     public enum Type {
         LET, IDENTIFIER, NUMBER, EQUAL, PLUS, PRINT, SEMICOLON,
-        LEFTBRACKET, RIGHTBRACKET, COMMA, MINUS, STAR, LESS, GREATER,
-        EQUALS, NOT_EQUALS, IF
+        LEFT_BRACKET, RIGHT_BRACKET, COMMA, MINUS, STAR, LESS, GREATER,
+        EQUALS, NOT_EQUALS, IF, FUN, RETURN,
     }
 
     public Type type;

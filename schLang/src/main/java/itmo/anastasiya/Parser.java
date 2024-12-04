@@ -27,7 +27,10 @@ public class Parser {
     public List<Instruction> parse() {
         List<Instruction> instructions = new ArrayList<>();
         while (pos < tokens.size()) {
-            if (currentToken().type == Token.Type.LET) {
+
+            if (currentToken().type == Token.Type.FUN) {
+                instructions.add(parseFunctionDeclaration());
+            } else if (currentToken().type == Token.Type.LET) {
                 eat(Token.Type.LET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
@@ -86,15 +89,15 @@ public class Parser {
                 eat(Token.Type.SEMICOLON);
             } else if (currentToken().type == Token.Type.PRINT) {
                 eat(Token.Type.PRINT);
-                eat(Token.Type.LEFTBRACKET);
+                eat(Token.Type.LEFT_BRACKET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
-                eat(Token.Type.RIGHTBRACKET);
+                eat(Token.Type.RIGHT_BRACKET);
                 eat(Token.Type.SEMICOLON);
                 instructions.add(new Instruction(Instruction.OpCode.PRINT, varName));
             } else if (currentToken().type == Token.Type.IF) {
                 eat(Token.Type.IF);
-                eat(Token.Type.LEFTBRACKET);
+                eat(Token.Type.LEFT_BRACKET);
                 Object conditionOperand1 = currentToken().value;
                 eat(currentToken().type);
 
@@ -103,14 +106,14 @@ public class Parser {
 
                 Object conditionOperand2 = currentToken().value;
                 eat(currentToken().type);
-                eat(Token.Type.RIGHTBRACKET);
+                eat(Token.Type.RIGHT_BRACKET);
 
                 List<Instruction> blockInstructions = new ArrayList<>();
-                eat(Token.Type.LEFTBRACKET);
-                while (currentToken().type != Token.Type.RIGHTBRACKET) {
+                eat(Token.Type.LEFT_BRACKET);
+                while (currentToken().type != Token.Type.RIGHT_BRACKET) {
                     blockInstructions.addAll(parseSingle());
                 }
-                eat(Token.Type.RIGHTBRACKET);
+                eat(Token.Type.RIGHT_BRACKET);
 
                 Instruction.OpCode comparisonOpCode = switch (comparisonType) {
                     case LESS -> Instruction.OpCode.LESS;
@@ -127,11 +130,44 @@ public class Parser {
                         conditionOperand2,
                         blockInstructions
                 ));
+            } else if (currentToken().type == Token.Type.RETURN) {
+                instructions.add(parseReturnStatement());
             } else {
                 throw new RuntimeException("Unknown statement: " + currentToken());
             }
         }
         return instructions;
+    }
+
+
+    // парсит объявление функции
+    private Instruction parseFunctionDeclaration() {
+        eat(Token.Type.FUN);
+        String functionName = currentToken().value;
+        eat(Token.Type.IDENTIFIER);
+
+        // Parse function parameters
+        eat(Token.Type.LEFT_BRACKET);
+        List<String> parameters = new ArrayList<>();
+        while (currentToken().type != Token.Type.RIGHT_BRACKET) {
+            parameters.add(currentToken().value);
+            eat(Token.Type.IDENTIFIER);
+            if (currentToken().type == Token.Type.COMMA) {
+                eat(Token.Type.COMMA);
+            }
+        }
+        eat(Token.Type.RIGHT_BRACKET);
+
+        return new Instruction(Instruction.OpCode.FUN, functionName, parameters);
+    }
+
+    // будет парсить возвращаемые значения
+    private Instruction parseReturnStatement() {
+        eat(Token.Type.RETURN);
+        String returnValue = currentToken().value;
+        eat(currentToken().type); // Can be IDENTIFIER or NUMBER
+        eat(Token.Type.SEMICOLON);
+        return new Instruction(Instruction.OpCode.RETURN, returnValue);
     }
 
     public List<Instruction> parseSingle() {
@@ -195,13 +231,18 @@ public class Parser {
             eat(Token.Type.SEMICOLON);
         } else if (currentToken().type == Token.Type.PRINT) {
             eat(Token.Type.PRINT);
-            eat(Token.Type.LEFTBRACKET);
+            eat(Token.Type.LEFT_BRACKET);
             String varName = currentToken().value;
             eat(Token.Type.IDENTIFIER);
-            eat(Token.Type.RIGHTBRACKET);
+            eat(Token.Type.RIGHT_BRACKET);
             eat(Token.Type.SEMICOLON);
             instructions.add(new Instruction(Instruction.OpCode.PRINT, varName));
-        } else {
+        } else if (currentToken().type == Token.Type.FUN) {
+            instructions.add(parseFunctionDeclaration());
+            // add return
+        } else if (currentToken().type == Token.Type.RETURN) {
+            instructions.add(parseReturnStatement());
+        }  else {
             throw new RuntimeException("Unknown statement: " + currentToken());
         }
 

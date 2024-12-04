@@ -60,6 +60,7 @@ public class Lexer {
                     case "let" -> tokens.add(new Token(Token.Type.LET, id));
                     case "print" -> tokens.add(new Token(Token.Type.PRINT, id));
                     case "if" -> tokens.add(new Token(Token.Type.IF, id));
+                    case "fun"  -> tokens.add(new Token(Token.Type.FUN, id));
                     default -> tokens.add(new Token(Token.Type.IDENTIFIER, id));
                 }
             } else if (currentChar == '=') {
@@ -89,10 +90,10 @@ public class Lexer {
                 tokens.add(new Token(Token.Type.SEMICOLON, ";"));
                 advance();
             } else if (currentChar == '[') {
-                tokens.add(new Token(Token.Type.LEFTBRACKET, "["));
+                tokens.add(new Token(Token.Type.LEFT_BRACKET, "["));
                 advance();
             } else if (currentChar == ']') {
-                tokens.add(new Token(Token.Type.RIGHTBRACKET, "]"));
+                tokens.add(new Token(Token.Type.RIGHT_BRACKET, "]"));
                 advance();
             } else if (currentChar == ',') {
                 tokens.add(new Token(Token.Type.COMMA, ","));

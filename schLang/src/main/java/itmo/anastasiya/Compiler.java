@@ -24,16 +24,46 @@ public class Compiler {
 
     private void writeInstruction(DataOutputStream out, Instruction instr) throws IOException {
         out.writeByte(instr.opCode.ordinal()); // Пишем код операции
-        out.writeUTF(instr.operand1 != null ? instr.operand1 : ""); // Пишем первый операнд
-        out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : ""); // Пишем второй операнд
-        out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : ""); // Пишем третий операнд
 
+        // Обработка различных типов инструкций
+        switch (instr.opCode) {
+            case FUN:
+                // Для функции пишем имя и параметры
+                out.writeUTF(instr.operand1 != null ? instr.operand1 : ""); // Имя функции
 
-        if (instr.opCode == Instruction.OpCode.IF && instr.block != null) {
-            out.writeInt(instr.block.size());
-            for (Instruction blockInstr : instr.block) {
-                writeInstruction(out, blockInstr);
-            }
+                // Запись списка параметров
+                List<String> parameters = (List<String>) instr.operand2;
+                out.writeInt(parameters.size());
+                for (String param : parameters) {
+                    out.writeUTF(param);
+                }
+                break;
+
+            case RETURN:
+                // Для возврата пишем возвращаемое значение
+                out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
+                break;
+
+            case IF:
+                // Существующая логика для IF
+                out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
+                out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : ""); // OpCode сравнения
+                out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
+
+                // Запись блока инструкций
+                if (instr.block != null) {
+                    out.writeInt(instr.block.size());
+                    for (Instruction blockInstr : instr.block) {
+                        writeInstruction(out, blockInstr);
+                    }
+                }
+                break;
+
+            default:
+                // Для остальных типов инструкций - существующая логика
+                out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
+                out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : "");
+                out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
         }
     }
 
