@@ -64,12 +64,14 @@ public class VirtualMachine {
             case STORE -> {
                 memoryManager.allocate(instruction.operand1, instruction.operand2);
             }
+            /*
             case ADD_REFERENCE -> {
                 memoryManager.addReference(instruction.operand1);
             }
             case RELEASE_REFERENCE -> {
                 memoryManager.releaseReference(instruction.operand1);
             }
+             */
             case PRINT -> {
                 Object value = memoryManager.getValue(instruction.operand1);
                 if (value != null) {
