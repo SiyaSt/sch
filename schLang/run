@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Проверка, что передан файл
+if [ "$#" -ne 1 ]; then
+  echo "Usage: ./run.sh <filename.mylang>"
+  exit 1
+fi
+
+# Получение имени исходного файла
+INPUT_FILE="$1"
+
+# Проверка существования файла
+if [ ! -f "$INPUT_FILE" ]; then
+  echo "Error: File '$INPUT_FILE' not found!"
+  exit 1
+fi
+
+# Компиляция исходных файлов в папке src/main/java/itmo/anastasiya/
+echo "Compiling Java files..."
+javac -d out src/main/java/itmo/anastasiya/*.java
+
+# Проверка успешности компиляции
+if [ $? -ne 0 ]; then
+  echo "Compilation failed!"
+  exit 1
+fi
+
+# Запуск основной программы Main
+echo "Running program..."
+java -cp out itmo.anastasiya.Main "$INPUT_FILE"
+
+# Завершение работы скрипта
+echo "Execution complete!"

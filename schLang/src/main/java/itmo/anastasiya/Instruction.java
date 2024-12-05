@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Instruction {
     public enum OpCode {
-        STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, IF, FUN, RETURN, NEW, READ_INDEX,
+        STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, IF, LOOP, FUN, RETURN, NEW, READ_INDEX,
         WRITE_INDEX, STORE_ARRAY_VAR, CALL
     }
 
@@ -27,6 +27,12 @@ public class Instruction {
         this(opCode, operand1, operand2, null, null);
     }
 
+    // Constructor for unary operations (like STORE with a single value)
+    public Instruction(OpCode opCode, String target, String operand1) {
+        this.opCode = opCode;
+        this.target = target;
+        this.operand1 = operand1;
+    }
 
     // Constructor for binary operations (add, sub, mul, comparisons)
     public Instruction(OpCode opCode, String operand1, Object operand2, Object operand3) {

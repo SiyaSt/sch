@@ -29,7 +29,7 @@ public class Compiler {
         switch (instr.opCode) {
             case FUN:
                 // Для функции пишем имя и параметры
-                out.writeUTF(instr.operand1 != null ? instr.operand1 : ""); // Имя функции
+                out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
 
                 // Запись списка параметров
                 List<String> parameters = (List<String>) instr.operand2;
@@ -64,6 +64,12 @@ public class Compiler {
                 out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
                 out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : "");
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
+        }
+        if (instr.opCode == Instruction.OpCode.LOOP && instr.block != null) {
+            out.writeInt(instr.block.size());
+            for (Instruction blockInstr : instr.block) {
+                writeInstruction(out, blockInstr);
+            }
         }
     }
 

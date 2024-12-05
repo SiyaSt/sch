@@ -48,7 +48,7 @@ public class VirtualMachine {
                 String operand3 = in.readUTF();
 
                 List<Instruction> block = null;
-                if (opCode == Instruction.OpCode.IF) {
+                if (opCode == Instruction.OpCode.IF || opCode == Instruction.OpCode.LOOP) {
                     int blockSize = in.readInt();
                     if (blockSize > 0) {
                         block = new ArrayList<>();
@@ -160,6 +160,13 @@ public class VirtualMachine {
                     run(instruction.block);
                 }
             }
+            case LOOP -> {
+                while (conditions(instruction)) {
+                    if (instruction.block != null) {
+                        run(instruction.block);
+                    }
+                }
+            }
             case FUN -> {
 
             }
@@ -245,9 +252,14 @@ public class VirtualMachine {
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
                 }
-            } else {
-                throw new RuntimeException("Variable " + varName + " has unsupported type: " + value.getClass());
+            } else if (value == null) {
+                try {
+                    return Integer.parseInt((String) operand);
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
+                }
             }
+            throw new RuntimeException("Variable " + varName + " has unsupported type: " + value.getClass());
         } else {
             throw new RuntimeException("Invalid operand type: " + operand);
         }
