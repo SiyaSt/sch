@@ -2,9 +2,15 @@ package itmo.anastasiya;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class MemoryManager {
-    private final Map<String, ObjectEntry> memory = new HashMap<>();
+
+    private final Map<String, ObjectEntry> globalMemory = new HashMap<>();
+
+    private final Stack<Map<String, ObjectEntry>> callStack = new Stack<>();
+
+    private Object returnValue;
 
     private static class ObjectEntry {
         Object value;
@@ -17,14 +23,18 @@ public class MemoryManager {
     }
 
     public void allocate(String name, Object value) {
-        if (memory.containsKey(name)) {
-            releaseReference(name);
+        if (isInFunction()) {
+            allocateLocal(name, value);
+        } else {
+            if (globalMemory.containsKey(name)) {
+                releaseReference(name);
+            }
+            globalMemory.put(name, new ObjectEntry(value));
         }
-        memory.put(name, new ObjectEntry(value));
     }
 
     public void addReference(String name) {
-        ObjectEntry entry = memory.get(name);
+        ObjectEntry entry = getMemoryEntry(name);
         if (entry != null) {
             entry.refCount++;
         } else {
@@ -33,11 +43,11 @@ public class MemoryManager {
     }
 
     public void releaseReference(String name) {
-        ObjectEntry entry = memory.get(name);
+        ObjectEntry entry = getMemoryEntry(name);
         if (entry != null) {
             entry.refCount--;
             if (entry.refCount <= 0) {
-                memory.remove(name);
+                getCurrentMemory().remove(name);
                 System.out.println("Object " + name + " deallocated");
             }
         } else {
@@ -46,21 +56,18 @@ public class MemoryManager {
     }
 
     public Object getValue(String name) {
-        ObjectEntry entry = memory.get(name);
+        ObjectEntry entry = getMemoryEntry(name);
         return (entry != null) ? entry.value : null;
     }
 
     public void allocateArray(String name, int size) {
-        if (memory.containsKey(name)) {
-            releaseReference(name);
-        }
-        memory.put(name, new ObjectEntry(new Object[size]));
+        allocate(name, new Object[size]);
     }
 
     public Object[] getArray(String name) {
-        ObjectEntry entry = memory.get(name);
-        if (entry != null && entry.value instanceof Object[]) {
-            return (Object[]) entry.value;
+        Object value = getValue(name);
+        if (value instanceof Object[]) {
+            return (Object[]) value;
         }
         throw new RuntimeException("Variable " + name + " is not an array");
     }
@@ -79,5 +86,53 @@ public class MemoryManager {
             throw new RuntimeException("Array index out of bounds: " + index);
         }
         return array[index];
+    }
+
+    public void enterFunction() {
+        // Создаём новую локальную область видимости
+        callStack.push(new HashMap<>());
+    }
+
+    public void exitFunction() {
+        // Удаляем локальную область видимости и освобождаем память
+        Map<String, ObjectEntry> localMemory = callStack.pop();
+        for (String name : localMemory.keySet()) {
+            releaseReference(name);
+        }
+    }
+
+    public void allocateLocal(String name, Object value) {
+        if (!isInFunction()) {
+            throw new RuntimeException("Local allocation can only be done inside a function");
+        }
+
+        Map<String, ObjectEntry> currentMemory = callStack.peek();
+        if (currentMemory.containsKey(name)) {
+            releaseReference(name);
+        }
+        currentMemory.put(name, new ObjectEntry(value));
+    }
+
+    public void setReturnValue(Object value) {
+        this.returnValue = value;
+    }
+
+    public Object getReturnValue() {
+        return this.returnValue;
+    }
+
+    private boolean isInFunction() {
+        return !callStack.isEmpty();
+    }
+
+    private Map<String, ObjectEntry> getCurrentMemory() {
+        return isInFunction() ? callStack.peek() : globalMemory;
+    }
+
+    private ObjectEntry getMemoryEntry(String name) {
+        if (isInFunction() && callStack.peek().containsKey(name)) {
+            return callStack.peek().get(name);
+        }
+        return globalMemory.get(name);
     }
 }

@@ -5,14 +5,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
-
 public class VirtualMachine {
     private final List<Instruction> instructions = new ArrayList<>();
-    private final MemoryManager memoryManager = new MemoryManager(); // Используем MemoryManager
+    private final MemoryManager memoryManager = new MemoryManager();
 
     private final Map<String, Instruction> functions = new HashMap<>();
-    // для возвращаемых значений
-    private final Map<String, Object> functionReturnValues = new HashMap<>();
+    private boolean isReturning = false;
 
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
@@ -21,7 +19,7 @@ public class VirtualMachine {
                 Instruction.OpCode opCode = Instruction.OpCode.values()[opCodeOrdinal];
 
                 switch (opCode) {
-                    case FUN:
+                    case FUN -> {
                         String functionName = in.readUTF();
                         int parameterCount = in.readInt();
                         List<String> parameters = new ArrayList<>();
@@ -29,22 +27,36 @@ public class VirtualMachine {
                             parameters.add(in.readUTF());
                         }
 
+                        int blockSize = in.readInt();
+                        List<Instruction> functionBody = new ArrayList<>();
+                        for (int i = 0; i < blockSize; i++) {
+                            int nestedOpCodeOrdinal = in.readByte();
+                            Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                            String nestedOperand1 = in.readUTF();
+                            String nestedOperand2 = in.readUTF();
+                            String nestedOperand3 = in.readUTF();
+                            functionBody.add(new Instruction(
+                                    nestedOpCode,
+                                    nestedOperand1,
+                                    nestedOperand2,
+                                    nestedOperand3
+                            ));
+                        }
+
                         Instruction functionInstruction = new Instruction(
                                 Instruction.OpCode.FUN,
                                 functionName,
-                                parameters
+                                parameters,
+                                functionBody
                         );
                         functions.put(functionName, functionInstruction);
                         continue;
-
-                    case RETURN:
+                    }
+                    case RETURN -> {
                         String returnValue = in.readUTF();
-                        Instruction returnInstruction = new Instruction(
-                                Instruction.OpCode.RETURN,
-                                returnValue
-                        );
-                        instructions.add(returnInstruction);
+                        instructions.add(new Instruction(Instruction.OpCode.RETURN, returnValue));
                         continue;
+                    }
                 }
 
                 String operand1 = in.readUTF();
@@ -85,8 +97,6 @@ public class VirtualMachine {
         }
     }
 
-
-
     public void run() {
         for (Instruction instruction : instructions) {
             execute(instruction);
@@ -98,14 +108,6 @@ public class VirtualMachine {
             case STORE -> {
                 memoryManager.allocate(instruction.operand1, instruction.operand2);
             }
-            /*
-            case ADD_REFERENCE -> {
-                memoryManager.addReference(instruction.operand1);
-            }
-            case RELEASE_REFERENCE -> {
-                memoryManager.releaseReference(instruction.operand1);
-            }
-             */
             case PRINT -> {
                 Object value = memoryManager.getValue(instruction.operand1);
                 if (value != null) {
@@ -148,12 +150,54 @@ public class VirtualMachine {
                     run(instruction.block);
                 }
             }
+            case FUN -> {
+
+            }
+            case CALL -> {
+                String functionName = instruction.operand1;
+                Instruction functionInstruction = functions.get(functionName);
+                if (functionInstruction == null) {
+                    throw new RuntimeException("Function " + functionName + " is not defined");
+                }
+
+                List<String> parameters = (List<String>) functionInstruction.operand2;
+
+                List<Instruction> functionBody = (List<Instruction>) functionInstruction.operand3;
+
+                memoryManager.enterFunction();
+
+                List<Object> arguments = (List<Object>) instruction.operand2;
+                if (parameters.size() != arguments.size()) {
+                    throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
+                }
+                for (int i = 0; i < parameters.size(); i++) {
+                    memoryManager.allocate(parameters.get(i), arguments.get(i));
+                }
+
+                run(functionBody);
+
+                Object returnValue = memoryManager.getReturnValue();
+                memoryManager.exitFunction();
+
+                if (instruction.operand3 != null) {
+                    memoryManager.allocate((String) instruction.operand3, returnValue);
+                }
+            }
+            case RETURN -> {
+                Object returnValue = getOperandValue(instruction.operand1);
+                memoryManager.setReturnValue(returnValue);
+                isReturning = true;
+
+            }
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
     }
 
     public void run(List<Instruction> block) {
         for (Instruction instruction : block) {
+            if (isReturning) {
+                break; // Завершаем выполнение текущего блока при возвращении из функции
+            }
             execute(instruction);
         }
     }
@@ -172,7 +216,7 @@ public class VirtualMachine {
             case NOT_EQUALS -> {
                 return !Objects.equals(getOperandValue(instruction.operand1), getOperandValue(instruction.operand3));
             }
-            default -> throw new RuntimeException("Unknown instruction: " + instruction.operand2);
+            default -> throw new RuntimeException("Unknown condition: " + instruction.operand2);
         }
     }
 
