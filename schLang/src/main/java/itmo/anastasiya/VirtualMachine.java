@@ -31,8 +31,7 @@ public class VirtualMachine {
                         Instruction functionInstruction = new Instruction(
                                 Instruction.OpCode.FUN,
                                 functionName,
-                                parameters,
-                                functionBody
+                                parameters
                         );
                         functions.put(functionName, functionInstruction);
                         continue;
