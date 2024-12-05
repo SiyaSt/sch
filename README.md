@@ -2,7 +2,7 @@
 sch language
 School programming language (Stupid children programming language)\
 ## Как запустить
-Перейдите в папку ./schlang\
+Перейдите в папку ./schlang
 ````
 cd ./schLang
 ````
