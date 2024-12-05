@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+
 public class VirtualMachine {
     private final List<Instruction> instructions = new ArrayList<>();
     private final MemoryManager memoryManager = new MemoryManager();
@@ -25,22 +26,6 @@ public class VirtualMachine {
                         List<String> parameters = new ArrayList<>();
                         for (int i = 0; i < parameterCount; i++) {
                             parameters.add(in.readUTF());
-                        }
-
-                        int blockSize = in.readInt();
-                        List<Instruction> functionBody = new ArrayList<>();
-                        for (int i = 0; i < blockSize; i++) {
-                            int nestedOpCodeOrdinal = in.readByte();
-                            Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
-                            String nestedOperand1 = in.readUTF();
-                            String nestedOperand2 = in.readUTF();
-                            String nestedOperand3 = in.readUTF();
-                            functionBody.add(new Instruction(
-                                    nestedOpCode,
-                                    nestedOperand1,
-                                    nestedOperand2,
-                                    nestedOperand3
-                            ));
                         }
 
                         Instruction functionInstruction = new Instruction(
@@ -97,6 +82,8 @@ public class VirtualMachine {
         }
     }
 
+
+
     public void run() {
         for (Instruction instruction : instructions) {
             execute(instruction);
@@ -144,6 +131,30 @@ public class VirtualMachine {
                 boolean result = !Objects.equals(getOperandValue(instruction.operand2), getOperandValue(instruction.operand3));
                 memoryManager.allocate(instruction.operand1, result);
             }
+            case NEW -> {
+                memoryManager.allocateArray(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+            }
+            case WRITE_INDEX -> {
+                memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2), instruction.operand3);
+            }
+
+            case STORE_ARRAY_VAR -> {
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                if (value != null) {
+                    System.out.println(value);
+                } else {
+                    throw new RuntimeException("Variable not found: " + instruction.operand1);
+                }
+                memoryManager.allocate((String)instruction.operand3, value);
+            }
+            case READ_INDEX -> {
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                if (value != null) {
+                    System.out.println(value);
+                } else {
+                    throw new RuntimeException("Variable not found: " + instruction.operand2);
+                }
+            }
             case IF -> {
                 boolean condition = conditions(instruction);
                 if (condition && instruction.block != null) {
@@ -189,6 +200,8 @@ public class VirtualMachine {
                 isReturning = true;
 
             }
+
+
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
     }

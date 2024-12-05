@@ -5,15 +5,12 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
 
+        //  let a = new [10];
         String code = """
-            fun[]
-                let a = 10;
-                let c = 10;
-                print [c];
-                let c = 11;
-                if [ c > a ]
-                [ print [c]; ]
-            return;
+          let a = new [10];
+          let a[0] = 1;
+          let b = a[0];
+          print [b];
         """;
 
         // Лексер
