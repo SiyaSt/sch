@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+
 public class VirtualMachine {
     private final List<Instruction> instructions = new ArrayList<>();
     private final MemoryManager memoryManager = new MemoryManager(); // Используем MemoryManager
