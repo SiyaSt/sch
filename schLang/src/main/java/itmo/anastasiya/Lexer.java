@@ -61,6 +61,8 @@ public class Lexer {
                     case "print" -> tokens.add(new Token(Token.Type.PRINT, id));
                     case "if" -> tokens.add(new Token(Token.Type.IF, id));
                     case "fun"  -> tokens.add(new Token(Token.Type.FUN, id));
+                    case "return" -> tokens.add(new Token(Token.Type.RETURN, id));
+                    case "new" -> tokens.add(new Token(Token.Type.NEW, id));
                     default -> tokens.add(new Token(Token.Type.IDENTIFIER, id));
                 }
             } else if (currentChar == '=') {

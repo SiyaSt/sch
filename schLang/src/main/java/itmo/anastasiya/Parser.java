@@ -34,13 +34,44 @@ public class Parser {
                 eat(Token.Type.LET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
+
+
+                // для работы с массивом, именно на запись
+                if (currentToken().type == Token.Type.LEFT_BRACKET) {
+                    eat(Token.Type.LEFT_BRACKET);
+                    String index = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    eat(Token.Type.EQUAL);
+                    String value = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    instructions.add(new Instruction(Instruction.OpCode.WRITE_INDEX, varName, index, value));
+                    eat(Token.Type.SEMICOLON);
+                    continue;
+                }
+
                 eat(Token.Type.EQUAL);
 
+                 if (currentToken().type == Token.Type.NEW) {
+                    eat(Token.Type.NEW);
+                    eat(Token.Type.LEFT_BRACKET);
+                    String amount = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    instructions.add(new Instruction(Instruction.OpCode.NEW, varName, amount));
+                } else if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
+                     Object operand1 = currentToken().value;
+                     eat(currentToken().type);
 
-                if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
-                    Object operand1 = currentToken().value;
-                    eat(currentToken().type);
-
+                     if (currentToken().type == Token.Type.LEFT_BRACKET) {
+                         eat(Token.Type.LEFT_BRACKET);
+                         String index = currentToken().value;
+                         eat(Token.Type.NUMBER);
+                         eat(Token.Type.RIGHT_BRACKET);
+                         eat(Token.Type.SEMICOLON);
+                         instructions.add(new Instruction(Instruction.OpCode.STORE_ARRAY_VAR, (String)operand1, index, varName));
+                         continue;
+                     }
 
                     if (currentToken().type == Token.Type.PLUS) {
                         eat(Token.Type.PLUS);
@@ -92,6 +123,18 @@ public class Parser {
                 eat(Token.Type.LEFT_BRACKET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
+
+                if (currentToken().type == Token.Type.LEFT_BRACKET) {
+                    eat(Token.Type.LEFT_BRACKET);
+                    String index = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    eat(Token.Type.SEMICOLON);
+                    instructions.add(new Instruction(Instruction.OpCode.READ_INDEX, varName, index));
+                    continue;
+                }
+
                 eat(Token.Type.RIGHT_BRACKET);
                 eat(Token.Type.SEMICOLON);
                 instructions.add(new Instruction(Instruction.OpCode.PRINT, varName));

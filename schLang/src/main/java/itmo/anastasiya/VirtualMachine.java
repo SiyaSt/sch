@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+import static itmo.anastasiya.Token.Type.STORE_ARRAY_VAR;
+
 
 public class VirtualMachine {
     private final List<Instruction> instructions = new ArrayList<>();
@@ -142,12 +144,38 @@ public class VirtualMachine {
                 boolean result = !Objects.equals(getOperandValue(instruction.operand2), getOperandValue(instruction.operand3));
                 memoryManager.allocate(instruction.operand1, result);
             }
+            case NEW -> {
+                memoryManager.allocateArray(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+            }
+            case WRITE_INDEX -> {
+                memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2), instruction.operand3);
+            }
+
+            case STORE_ARRAY_VAR -> {
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                if (value != null) {
+                    System.out.println(value);
+                } else {
+                    throw new RuntimeException("Variable not found: " + instruction.operand1);
+                }
+                memoryManager.allocate((String)instruction.operand3, value);
+            }
+            case READ_INDEX -> {
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                if (value != null) {
+                    System.out.println(value);
+                } else {
+                    throw new RuntimeException("Variable not found: " + instruction.operand2);
+                }
+            }
             case IF -> {
                 boolean condition = conditions(instruction);
                 if (condition && instruction.block != null) {
                     run(instruction.block);
                 }
             }
+
+
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
     }
