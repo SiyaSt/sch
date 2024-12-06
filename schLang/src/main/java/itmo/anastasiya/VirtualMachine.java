@@ -168,7 +168,17 @@ public class VirtualMachine {
                 }
             }
             case FUN -> {
+                String functionName = instruction.operand1;
+                int parameterCount = Integer.parseInt((String) instruction.operand2);
+                List<String> parameters = (List<String>) instruction.operand3;
 
+                List<Instruction> functionBody = (List<Instruction>) instruction.block;
+
+                // Создаем объект инструкции для функции и добавляем в список функций
+                Instruction functionInstruction = new Instruction(
+                        Instruction.OpCode.FUN, functionName, parameters, functionBody
+                );
+                functions.put(functionName, functionInstruction);
             }
             case CALL -> {
                 String functionName = instruction.operand1;
@@ -204,9 +214,7 @@ public class VirtualMachine {
                 Object returnValue = getOperandValue(instruction.operand1);
                 memoryManager.setReturnValue(returnValue);
                 isReturning = true;
-
             }
-
 
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
