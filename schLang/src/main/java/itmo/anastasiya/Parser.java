@@ -37,10 +37,16 @@ public class Parser {
                 eat(Token.Type.IDENTIFIER);
                 eat(Token.Type.EQUAL);
 
-
-                if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
-                    Object operand1 = currentToken().value;
-                    eat(currentToken().type);
+                 if (currentToken().type == Token.Type.NEW) {
+                    eat(Token.Type.NEW);
+                    eat(Token.Type.LEFT_BRACKET);
+                    Object amount = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    instructions.add(new Instruction(Instruction.OpCode.NEW, varName, amount));
+                } else if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
+                     Object operand1 = currentToken().value;
+                     eat(currentToken().type);
 
                      if (currentToken().type == Token.Type.LEFT_BRACKET) {
                          eat(Token.Type.LEFT_BRACKET);
