@@ -5,7 +5,7 @@ import java.util.List;
 public class Instruction {
     public enum OpCode {
         STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, IF, FUN, RETURN, NEW, READ_INDEX,
-        WRITE_INDEX, STORE_ARRAY_VAR, CALL
+        WRITE_INDEX, STORE_ARRAY_VAR, CALL, LOOP
     }
 
     public OpCode opCode;
@@ -38,9 +38,9 @@ public class Instruction {
     }
 
     // Constructor for function declarations
-    public Instruction(OpCode opCode, String target, List<String> parameters) {
+    public Instruction(OpCode opCode, String operand1, List<String> parameters) {
         this.opCode = opCode;
-        this.target = target;
+        this.operand1 = operand1;
         this.parameters = parameters;
     }
 

@@ -65,6 +65,12 @@ public class Compiler {
                 out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : "");
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
         }
+        if (instr.opCode == Instruction.OpCode.LOOP && instr.block != null) {
+            out.writeInt(instr.block.size());
+            for (Instruction blockInstr : instr.block) {
+                writeInstruction(out, blockInstr);
+            }
+        }
     }
 
 }

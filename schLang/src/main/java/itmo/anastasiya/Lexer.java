@@ -60,6 +60,7 @@ public class Lexer {
                     case "let" -> tokens.add(new Token(Token.Type.LET, id));
                     case "print" -> tokens.add(new Token(Token.Type.PRINT, id));
                     case "if" -> tokens.add(new Token(Token.Type.IF, id));
+                    case "loop" -> tokens.add(new Token(Token.Type.LOOP, id));
                     case "fun"  -> tokens.add(new Token(Token.Type.FUN, id));
                     case "return" -> tokens.add(new Token(Token.Type.RETURN, id));
                     case "new" -> tokens.add(new Token(Token.Type.NEW, id));
