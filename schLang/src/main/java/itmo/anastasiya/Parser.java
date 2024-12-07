@@ -35,6 +35,21 @@ public class Parser {
                 eat(Token.Type.LET);
                 String varName = currentToken().value;
                 eat(Token.Type.IDENTIFIER);
+
+
+                if (currentToken().type == Token.Type.LEFT_BRACKET) {
+                    eat(Token.Type.LEFT_BRACKET);
+                    String index = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    eat(Token.Type.RIGHT_BRACKET);
+                    eat(Token.Type.EQUAL);
+                    String value = currentToken().value;
+                    eat(Token.Type.NUMBER);
+                    instructions.add(new Instruction(Instruction.OpCode.WRITE_INDEX, varName, index, value));
+                    eat(Token.Type.SEMICOLON);
+                    continue;
+                }
+
                 eat(Token.Type.EQUAL);
 
                  if (currentToken().type == Token.Type.NEW) {

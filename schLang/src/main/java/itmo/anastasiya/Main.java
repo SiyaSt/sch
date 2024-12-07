@@ -6,14 +6,8 @@ public class Main {
     public static void main(String[] args) {
 
         String code = """
-            fun x [let a]
-                let a = 10;
-                let c = 10;
-                print [c];
-                let c = 11;
-                if [ c > a ]
-                [ print [c]; ]
-            return a;
+            let a = new [10];
+            let a[0] = 1;
         """;
 
         // Лексер
