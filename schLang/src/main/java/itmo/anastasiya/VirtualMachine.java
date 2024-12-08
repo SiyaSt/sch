@@ -190,10 +190,9 @@ public class VirtualMachine {
             }
             case FUN -> {
                 String functionName = instruction.operand1;
-                int parameterCount = Integer.parseInt((String) instruction.operand2);
                 List<String> parameters = instruction.parameters;
 
-                List<Instruction> functionBody = (List<Instruction>) instruction.block;
+                List<Instruction> functionBody = instruction.block;
 
                 // Создаем объект инструкции для функции и добавляем в список функций
                 Instruction functionInstruction = new Instruction(
@@ -220,7 +219,7 @@ public class VirtualMachine {
                     throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                 }
                 for (int i = 0; i < parameters.size(); i++) {
-                    memoryManager.allocate(parameters.get(i), arguments.get(i));
+                    memoryManager.allocate(parameters.get(i), getOperandValue(arguments.get(i)));
                 }
 
                 run(functionBody);

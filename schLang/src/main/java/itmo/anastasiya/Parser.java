@@ -244,8 +244,8 @@ public class Parser {
         eat(Token.Type.LEFT_BRACKET);
         List<String> parameters = new ArrayList<>();
         while (currentToken().type != Token.Type.RIGHT_BRACKET) {
-            parameters.add(currentToken().value);
             eat(Token.Type.LET);
+            parameters.add(currentToken().value);
             eat(Token.Type.IDENTIFIER);
             if (currentToken().type == Token.Type.COMMA) {
                 eat(Token.Type.COMMA);
@@ -334,7 +334,7 @@ public class Parser {
                     } else if (currentToken().type == Token.Type.CALL_FUN_OPEN) {
                         eat(Token.Type.CALL_FUN_OPEN);
                         String fune = (String) operand1; // Используем operand1 как имя функции
-                        List<Object> arguments = new ArrayList<>();
+                        List<String> arguments = new ArrayList<>();
 
                         while (currentToken().type != Token.Type.CALL_FUN_CLOSE) {
                             if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {

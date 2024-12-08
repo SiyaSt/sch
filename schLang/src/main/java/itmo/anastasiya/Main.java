@@ -6,9 +6,13 @@ public class Main {
     public static void main(String[] args) {
 
         String code = """
-            let a = new [10];
-            let a[0] = 1;
-        """;
+                    fun x [let v]
+                        let c = 10 + v;
+                        print[v];
+                    return v;
+                    let a = 1;
+                    let c = x(a);
+                """;
 
         // Лексер
         Lexer lexer = new Lexer(code);
