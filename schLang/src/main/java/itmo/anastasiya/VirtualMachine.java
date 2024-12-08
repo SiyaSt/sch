@@ -226,13 +226,20 @@ public class VirtualMachine {
 
                 Object returnValue = memoryManager.getReturnValue();
                 memoryManager.exitFunction();
+                isReturning = false;
 
                 if (instruction.operand3 != null) {
+                    if (returnValue == null) {
+                        throw new RuntimeException("Function did not return a value for assignment to: " + instruction.operand3);
+                    }
                     memoryManager.allocate((String) instruction.operand3, returnValue);
                 }
             }
             case RETURN -> {
-                Object returnValue = getOperandValue(instruction.operand1);
+                Object returnValue = memoryManager.getValue(instruction.operand1);
+                if (returnValue == null) {
+                    throw new RuntimeException("Return value not found for variable: " + instruction.operand1);
+                }
                 memoryManager.setReturnValue(returnValue);
                 isReturning = true;
             }
@@ -300,16 +307,18 @@ public class VirtualMachine {
         }
 
         String str = (String) input;
-
-        String trimmed = str.substring(1, str.length() - 1);
+        String trimmed = str.substring(1, str.length() - 1).trim(); // Убираем скобки и пробелы
 
         if (trimmed.isEmpty()) {
             return new ArrayList<>();
         }
 
+        // Разбиваем строку по запятым
+        String[] items = trimmed.split(",");
         List<Object> result = new ArrayList<>();
-        result.add(trimmed);
-
+        for (String item : items) {
+            result.add(item.trim()); // Добавляем элементы без пробелов
+        }
         return result;
     }
 }

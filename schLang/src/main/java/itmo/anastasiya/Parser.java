@@ -123,7 +123,7 @@ public class Parser {
                         }
 
                         eat(Token.Type.CALL_FUN_CLOSE);
-                        instructions.add(new Instruction(Instruction.OpCode.CALL, functionName, arguments));
+                        instructions.add(new Instruction(Instruction.OpCode.CALL, functionName, arguments, varName));
                     } else {
                         instructions.add(new Instruction(Instruction.OpCode.STORE, varName, operand1));
                     }

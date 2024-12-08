@@ -7,11 +7,14 @@ public class Main {
 
         String code = """
                     fun x [let v]
-                        let c = 10 + v;
+                        let f = 10 + v;
+                        let v = f + v;
                         print[v];
                     return v;
                     let a = 1;
+                    let b = 2;
                     let c = x(a);
+                    print[c];
                 """;
 
         // Лексер
