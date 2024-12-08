@@ -42,12 +42,34 @@ public class MemoryManager {
         }
     }
 
+    public void exitFunction() {
+        Map<String, ObjectEntry> localMemory = callStack.pop(); // Pop before iterating
+        for (String name : localMemory.keySet()) {
+            // Check if the variable exists ONLY in local scope
+            if (!globalMemory.containsKey(name)) {  //Added check
+                ObjectEntry entry = localMemory.get(name);
+                if (entry != null) {
+                    entry.refCount--;
+                    if (entry.refCount <= 0) {
+                        System.out.println("Object " + name + " deallocated");
+                    }
+                }
+            }
+        }
+    }
+
+
     public void releaseReference(String name) {
         ObjectEntry entry = getMemoryEntry(name);
         if (entry != null) {
             entry.refCount--;
             if (entry.refCount <= 0) {
-                getCurrentMemory().remove(name);
+                //Determine which scope to remove from.
+                if (isInFunction() && callStack.peek().containsKey(name)) {
+                    callStack.peek().remove(name);
+                } else {
+                    globalMemory.remove(name);
+                }
                 System.out.println("Object " + name + " deallocated");
             }
         } else {
@@ -91,14 +113,6 @@ public class MemoryManager {
     public void enterFunction() {
         // Создаём новую локальную область видимости
         callStack.push(new HashMap<>());
-    }
-
-    public void exitFunction() {
-        // Удаляем локальную область видимости и освобождаем память
-        Map<String, ObjectEntry> localMemory = callStack.pop();
-        for (String name : localMemory.keySet()) {
-            releaseReference(name);
-        }
     }
 
     public void allocateLocal(String name, Object value) {
