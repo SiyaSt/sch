@@ -213,8 +213,9 @@ public class VirtualMachine {
                 List<Instruction> functionBody = functionInstruction.block;
 
                 memoryManager.enterFunction();
+                var args = instruction.operand2;
 
-                List<Object> arguments = (List<Object>) instruction.operand2;
+                List<Object> arguments = parseToListOfObjects(args);
                 if (parameters.size() != arguments.size()) {
                     throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                 }
@@ -292,5 +293,24 @@ public class VirtualMachine {
         } else {
             throw new RuntimeException("Invalid operand type: " + operand);
         }
+    }
+
+    public static List<Object> parseToListOfObjects(Object input) {
+        if (!(input instanceof String)) {
+            throw new IllegalArgumentException("Input must be a String");
+        }
+
+        String str = (String) input;
+
+        String trimmed = str.substring(1, str.length() - 1);
+
+        if (trimmed.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Object> result = new ArrayList<>();
+        result.add(trimmed);
+
+        return result;
     }
 }
