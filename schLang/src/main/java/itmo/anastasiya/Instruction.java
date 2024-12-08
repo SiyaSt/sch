@@ -43,6 +43,7 @@ public class Instruction {
         this(opCode, operand1, operand2, null, blockInstructions);
     }
 
+
     // Constructor for function declarations
     public Instruction(OpCode opCode, String operand1, List<String> parameters) {
         this.opCode = opCode;
@@ -56,6 +57,25 @@ public class Instruction {
         this.operand2 = operand2;
         this.operand3 = operand3;
         this.block = blockInstructions;
+    }
+
+    public Instruction(OpCode opCode, String operand1, List<Instruction> blockInstructions, List<String> parameters) {
+        this.opCode = opCode;
+        this.operand1 = operand1;
+        this.block = blockInstructions;
+        this.parameters = parameters;
+    }
+
+    public Instruction() {}
+
+
+    public static Instruction FunctionInstruction(String functionName, List<String> parameters, List<Instruction> instructions) {
+        Instruction newInstruction =  new Instruction();
+        newInstruction.opCode = Instruction.OpCode.FUN;
+        newInstruction.operand1 = functionName;
+        newInstruction.block = instructions;
+        newInstruction.parameters = parameters;
+        return newInstruction;
     }
 
     //может использовать string builder? Так как будто более безопасно

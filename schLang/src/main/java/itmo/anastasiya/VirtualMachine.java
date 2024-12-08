@@ -28,11 +28,32 @@ public class VirtualMachine {
                             parameters.add(in.readUTF());
                         }
 
-                        Instruction functionInstruction = new Instruction(
-                                Instruction.OpCode.FUN,
-                                functionName,
-                                parameters
-                        );
+                        List<Instruction> block = null;
+                        int blockSize = in.readInt();
+                        if (blockSize > 0) {
+                            block = new ArrayList<>();
+                            for (int i = 0; i < blockSize; i++) {
+                                int nestedOpCodeOrdinal = in.readByte();
+                                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                                 if (nestedOpCode == Instruction.OpCode.RETURN) {
+                                     String returnValue = in.readUTF();
+                                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue));
+                                 } else {
+                                     String nestedOperand1 = in.readUTF();
+                                     String nestedOperand2 = in.readUTF();
+                                     String nestedOperand3 = in.readUTF();
+                                     block.add(new Instruction(
+                                             nestedOpCode,
+                                             nestedOperand1,
+                                             nestedOperand2,
+                                             nestedOperand3
+                                     ));
+                                 }
+                            }
+                        }
+
+                        Instruction functionInstruction = Instruction.FunctionInstruction(functionName, parameters, block);
+
                         functions.put(functionName, functionInstruction);
                         continue;
                     }
@@ -170,7 +191,7 @@ public class VirtualMachine {
             case FUN -> {
                 String functionName = instruction.operand1;
                 int parameterCount = Integer.parseInt((String) instruction.operand2);
-                List<String> parameters = (List<String>) instruction.operand3;
+                List<String> parameters = instruction.parameters;
 
                 List<Instruction> functionBody = (List<Instruction>) instruction.block;
 
@@ -187,9 +208,9 @@ public class VirtualMachine {
                     throw new RuntimeException("Function " + functionName + " is not defined");
                 }
 
-                List<String> parameters = (List<String>) functionInstruction.operand2;
+                List<String> parameters = functionInstruction.parameters;
 
-                List<Instruction> functionBody = (List<Instruction>) functionInstruction.operand3;
+                List<Instruction> functionBody = functionInstruction.block;
 
                 memoryManager.enterFunction();
 

@@ -28,14 +28,18 @@ public class Compiler {
         // Обработка различных типов инструкций
         switch (instr.opCode) {
             case FUN:
-                // Для функции пишем имя и параметры
                 out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
 
                 // Запись списка параметров
-                List<String> parameters = (List<String>) instr.operand2;
+                List<String> parameters = instr.parameters;
                 out.writeInt(parameters.size());
                 for (String param : parameters) {
                     out.writeUTF(param);
+                }
+
+                out.writeInt(instr.block.size());
+                for (Instruction blockInstr : instr.block) {
+                    writeInstruction(out, blockInstr);
                 }
                 break;
 

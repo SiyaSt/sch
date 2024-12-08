@@ -98,6 +98,12 @@ public class Lexer {
             } else if (currentChar == ']') {
                 tokens.add(new Token(Token.Type.RIGHT_BRACKET, "]"));
                 advance();
+            } else if (currentChar == '(') {
+                tokens.add(new Token(Token.Type.CALL_FUN_OPEN, "("));
+                advance();
+            } else if (currentChar == ')') {
+                tokens.add(new Token(Token.Type.CALL_FUN_CLOSE, ")"));
+                advance();
             } else if (currentChar == ',') {
                 tokens.add(new Token(Token.Type.COMMA, ","));
                 advance();
