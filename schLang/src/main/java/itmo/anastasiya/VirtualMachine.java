@@ -35,31 +35,38 @@ public class VirtualMachine {
                             for (int i = 0; i < blockSize; i++) {
                                 int nestedOpCodeOrdinal = in.readByte();
                                 Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
-                                 if (nestedOpCode == Instruction.OpCode.RETURN) {
-                                     String returnValue = in.readUTF();
+                                if (nestedOpCode == Instruction.OpCode.RETURN) {
+                                    String returnValue = in.readUTF();
 
-                                     Instruction instruction = null;
-                                     if (returnValue == null || returnValue.isEmpty()) {
+                                    Instruction instruction = null;
+                                    if (returnValue.isEmpty()) {
                                         nestedOpCodeOrdinal = in.readByte();
                                         nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
                                         String nestedOperand1 = in.readUTF();
                                         String nestedOperand2 = in.readUTF();
                                         String nestedOperand3 = in.readUTF();
                                         instruction = new Instruction(nestedOpCode, nestedOperand1, nestedOperand2, nestedOperand3);
-                                     }
+                                    }
 
-                                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
-                                 } else {
-                                     String nestedOperand1 = in.readUTF();
-                                     String nestedOperand2 = in.readUTF();
-                                     String nestedOperand3 = in.readUTF();
-                                     block.add(new Instruction(
-                                             nestedOpCode,
-                                             nestedOperand1,
-                                             nestedOperand2,
-                                             nestedOperand3
-                                     ));
-                                 }
+                                    block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
+                                } else if (nestedOpCode == Instruction.OpCode.IF || nestedOpCode == Instruction.OpCode.LOOP) {
+                                    String operand1 = in.readUTF();
+                                    String operand2 = in.readUTF();
+                                    String operand3 = in.readUTF();
+                                    List<Instruction> nestedBlock = readNestedBlock(in);
+                                    block.add(new Instruction(nestedOpCode, operand1, operand2, operand3, nestedBlock));
+
+                                } else {
+                                    String nestedOperand1 = in.readUTF();
+                                    String nestedOperand2 = in.readUTF();
+                                    String nestedOperand3 = in.readUTF();
+                                    block.add(new Instruction(
+                                            nestedOpCode,
+                                            nestedOperand1,
+                                            nestedOperand2,
+                                            nestedOperand3
+                                    ));
+                                }
                             }
                         }
 
@@ -81,23 +88,7 @@ public class VirtualMachine {
 
                 List<Instruction> block = null;
                 if (opCode == Instruction.OpCode.IF || opCode == Instruction.OpCode.LOOP) {
-                    int blockSize = in.readInt();
-                    if (blockSize > 0) {
-                        block = new ArrayList<>();
-                        for (int i = 0; i < blockSize; i++) {
-                            int nestedOpCodeOrdinal = in.readByte();
-                            Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
-                            String nestedOperand1 = in.readUTF();
-                            String nestedOperand2 = in.readUTF();
-                            String nestedOperand3 = in.readUTF();
-                            block.add(new Instruction(
-                                    nestedOpCode,
-                                    nestedOperand1,
-                                    nestedOperand2,
-                                    nestedOperand3
-                            ));
-                        }
-                    }
+                    block = readNestedBlock(in);
                 }
 
                 instructions.add(new Instruction(
@@ -113,7 +104,27 @@ public class VirtualMachine {
         }
     }
 
-
+    public List<Instruction> readNestedBlock(DataInputStream in) throws IOException {
+        List<Instruction> block = new ArrayList<>();
+        int blockSize = in.readInt();
+        if (blockSize > 0) {
+            block = new ArrayList<>();
+            for (int i = 0; i < blockSize; i++) {
+                int nestedOpCodeOrdinal = in.readByte();
+                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                String nestedOperand1 = in.readUTF();
+                String nestedOperand2 = in.readUTF();
+                String nestedOperand3 = in.readUTF();
+                block.add(new Instruction(
+                        nestedOpCode,
+                        nestedOperand1,
+                        nestedOperand2,
+                        nestedOperand3
+                ));
+            }
+        }
+        return block;
+    }
 
     public void run() {
         for (Instruction instruction : instructions) {
@@ -163,23 +174,23 @@ public class VirtualMachine {
                 memoryManager.allocate(instruction.operand1, result);
             }
             case NEW -> {
-                memoryManager.allocateArray(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                memoryManager.allocateArray(instruction.operand1, Integer.parseInt((String) instruction.operand2));
             }
             case WRITE_INDEX -> {
-                memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2), instruction.operand3);
+                memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2), instruction.operand3);
             }
 
             case STORE_ARRAY_VAR -> {
-                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2));
                 if (value != null) {
                     System.out.println(value);
                 } else {
                     throw new RuntimeException("Variable not found: " + instruction.operand1);
                 }
-                memoryManager.allocate((String)instruction.operand3, value);
+                memoryManager.allocate((String) instruction.operand3, value);
             }
             case READ_INDEX -> {
-                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String)instruction.operand2));
+                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2));
                 if (value != null) {
                     System.out.println(value);
                 } else {
@@ -247,7 +258,7 @@ public class VirtualMachine {
                 }
             }
             case RETURN -> {
-                if (instruction.operand1 == null || instruction.operand1.isEmpty())  {
+                if (instruction.operand1 == null || instruction.operand1.isEmpty()) {
                     Instruction instruction1 = (Instruction) instruction.operand2;
                     String functionName = instruction1.operand1;
                     Instruction functionInstruction = functions.get(functionName);

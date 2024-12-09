@@ -7,10 +7,13 @@ public class Main {
 
         String code = """
                     fun x [let v]
-                        let f = 10 + v;
-                        let v = f + v;
+                        let v = 1 + v;
                         print[v];
-                        return x(v + 0);
+                        if [ v != 10]
+                        [
+                            return x(v);
+                        ]
+                        return v;
                     let a = 1;
                     let b = 2;
                     let c = x(a);
