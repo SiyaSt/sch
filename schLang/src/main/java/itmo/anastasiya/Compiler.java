@@ -46,6 +46,10 @@ public class Compiler {
             case RETURN:
                 // Для возврата пишем возвращаемое значение
                 out.writeUTF(instr.operand1 != null ? instr.operand1 : "");
+
+                if (instr.operand2 != null) {
+                    writeInstruction(out, (Instruction) instr.operand2);
+                }
                 break;
 
             case IF:

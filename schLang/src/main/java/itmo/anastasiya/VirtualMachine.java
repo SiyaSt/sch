@@ -37,7 +37,18 @@ public class VirtualMachine {
                                 Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
                                  if (nestedOpCode == Instruction.OpCode.RETURN) {
                                      String returnValue = in.readUTF();
-                                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue));
+
+                                     Instruction instruction = null;
+                                     if (returnValue == null || returnValue.isEmpty()) {
+                                        nestedOpCodeOrdinal = in.readByte();
+                                        nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                                        String nestedOperand1 = in.readUTF();
+                                        String nestedOperand2 = in.readUTF();
+                                        String nestedOperand3 = in.readUTF();
+                                        instruction = new Instruction(nestedOpCode, nestedOperand1, nestedOperand2, nestedOperand3);
+                                     }
+
+                                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
                                  } else {
                                      String nestedOperand1 = in.readUTF();
                                      String nestedOperand2 = in.readUTF();
@@ -236,10 +247,49 @@ public class VirtualMachine {
                 }
             }
             case RETURN -> {
+                if (instruction.operand1 == null || instruction.operand1.isEmpty())  {
+                    Instruction instruction1 = (Instruction) instruction.operand2;
+                    String functionName = instruction1.operand1;
+                    Instruction functionInstruction = functions.get(functionName);
+                    if (functionInstruction == null) {
+                        throw new RuntimeException("Function " + functionName + " is not defined");
+                    }
+
+                    List<String> parameters = functionInstruction.parameters;
+
+                    List<Instruction> functionBody = functionInstruction.block;
+
+                    memoryManager.enterFunction();
+                    var args = instruction1.operand2;
+
+                    List<Object> arguments = parseToListOfObjects(args);
+                    if (parameters.size() != arguments.size()) {
+                        throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
+                    }
+                    for (int i = 0; i < parameters.size(); i++) {
+                        memoryManager.allocate(parameters.get(i), getOperandValue(arguments.get(i)));
+                    }
+
+                    run(functionBody);
+
+                    Object returnValue = memoryManager.getReturnValue();
+                    memoryManager.exitFunction();
+                    isReturning = false;
+
+                    if (instruction1.operand3 != null) {
+                        if (returnValue == null) {
+                            throw new RuntimeException("Function did not return a value for assignment to: " + instruction1.operand3);
+                        }
+                        memoryManager.allocate((String) instruction1.operand3, returnValue);
+                    }
+                    return;
+                }
+
                 Object returnValue = memoryManager.getValue(instruction.operand1);
                 if (returnValue == null) {
                     throw new RuntimeException("Return value not found for variable: " + instruction.operand1);
                 }
+
                 memoryManager.setReturnValue(returnValue);
                 isReturning = true;
             }

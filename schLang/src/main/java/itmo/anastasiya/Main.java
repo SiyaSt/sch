@@ -10,7 +10,7 @@ public class Main {
                         let f = 10 + v;
                         let v = f + v;
                         print[v];
-                    return v;
+                        return x(v + 0);
                     let a = 1;
                     let b = 2;
                     let c = x(a);

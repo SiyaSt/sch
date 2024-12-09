@@ -178,6 +178,8 @@ public class Parser {
                     case GREATER -> Instruction.OpCode.GREATER;
                     case EQUALS -> Instruction.OpCode.EQUALS;
                     case NOT_EQUALS -> Instruction.OpCode.NOT_EQUALS;
+                    case RETURN -> Instruction.OpCode.RETURN;
+
                     default -> throw new RuntimeException("Unsupported comparison operator: " + comparisonType);
                 };
 
@@ -452,16 +454,39 @@ public class Parser {
             }
         }
 
-
         instructions.add(parseReturnStatement());
+
         return Instruction.FunctionInstruction(functionName, parameters, instructions);
     }
 
     // будет парсить возвращаемые значения
     private Instruction parseReturnStatement() {
         eat(Token.Type.RETURN);
+
         String returnValue = currentToken().value;
         eat(currentToken().type); // Can be IDENTIFIER or NUMBER
+
+        if (currentToken().type == Token.Type.CALL_FUN_OPEN) {
+            eat(Token.Type.CALL_FUN_OPEN);
+            List<Object> arguments = new ArrayList<>();
+
+            while (currentToken().type != Token.Type.CALL_FUN_CLOSE) {
+                if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
+                    arguments.add(currentToken().value);
+                    eat(currentToken().type);
+                } else if (currentToken().type == Token.Type.COMMA) {
+                    eat(Token.Type.COMMA); // Пропускаем запятые между аргументами
+                }
+
+            }
+
+            eat(Token.Type.CALL_FUN_CLOSE);
+
+            Instruction instruction = new Instruction(Instruction.OpCode.CALL, returnValue, arguments, null);
+            eat(Token.Type.SEMICOLON);
+            return new Instruction(Instruction.OpCode.RETURN, null, instruction);
+        }
+
         eat(Token.Type.SEMICOLON);
         return new Instruction(Instruction.OpCode.RETURN, returnValue);
     }
