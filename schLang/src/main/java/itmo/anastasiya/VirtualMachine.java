@@ -112,15 +112,32 @@ public class VirtualMachine {
             for (int i = 0; i < blockSize; i++) {
                 int nestedOpCodeOrdinal = in.readByte();
                 Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
-                String nestedOperand1 = in.readUTF();
-                String nestedOperand2 = in.readUTF();
-                String nestedOperand3 = in.readUTF();
-                block.add(new Instruction(
-                        nestedOpCode,
-                        nestedOperand1,
-                        nestedOperand2,
-                        nestedOperand3
-                ));
+                if (nestedOpCode == Instruction.OpCode.RETURN) {
+                    String returnValue = in.readUTF();
+
+                    Instruction instruction = null;
+                    if (returnValue.isEmpty()) {
+                        nestedOpCodeOrdinal = in.readByte();
+                        nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                        String nestedOperand1 = in.readUTF();
+                        String nestedOperand2 = in.readUTF();
+                        String nestedOperand3 = in.readUTF();
+                        instruction = new Instruction(nestedOpCode, nestedOperand1, nestedOperand2, nestedOperand3);
+                    }
+
+                    block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
+                } else {
+                    String nestedOperand1 = in.readUTF();
+                    String nestedOperand2 = in.readUTF();
+                    String nestedOperand3 = in.readUTF();
+                    block.add(new Instruction(
+                            nestedOpCode,
+                            nestedOperand1,
+                            nestedOperand2,
+                            nestedOperand3
+                    ));
+                }
+
             }
         }
         return block;
