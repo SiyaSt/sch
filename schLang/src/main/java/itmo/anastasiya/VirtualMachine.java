@@ -1,3 +1,5 @@
+// VirtualMachine.java
+
 package itmo.anastasiya;
 
 import java.io.DataInputStream;
@@ -284,22 +286,23 @@ public class VirtualMachine {
                     }
 
                     List<String> parameters = functionInstruction.parameters;
-
                     List<Instruction> functionBody = functionInstruction.block;
 
-                    memoryManager.enterFunction();
-                    var args = instruction1.operand2;
-
+                    String args = String.valueOf(instruction1.operand2);
                     List<Object> arguments = parseToListOfObjects(args);
                     if (parameters.size() != arguments.size()) {
                         throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                     }
+                    List<Object> operandValues = new ArrayList<>();
                     for (int i = 0; i < parameters.size(); i++) {
-                        memoryManager.allocate(parameters.get(i), getOperandValue(arguments.get(i)));
+                        operandValues.add(getOperandValue(arguments.get(i)));
                     }
 
+                    memoryManager.enterFunction();
+                    for (int i = 0; i < parameters.size(); i++) {
+                        memoryManager.allocate(parameters.get(i), operandValues.get(i));
+                    }
                     run(functionBody);
-
                     Object returnValue = memoryManager.getReturnValue();
                     memoryManager.exitFunction();
                     isReturning = false;
@@ -310,9 +313,8 @@ public class VirtualMachine {
                         }
                         memoryManager.allocate((String) instruction1.operand3, returnValue);
                     }
-                    return;
+                    return; // важно выйти из кейса return
                 }
-
                 Object returnValue = memoryManager.getValue(instruction.operand1);
                 if (returnValue == null) {
                     throw new RuntimeException("Return value not found for variable: " + instruction.operand1);
@@ -321,7 +323,6 @@ public class VirtualMachine {
                 memoryManager.setReturnValue(returnValue);
                 isReturning = true;
             }
-
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
     }
@@ -380,10 +381,6 @@ public class VirtualMachine {
     }
 
     public static List<Object> parseToListOfObjects(Object input) {
-        if (!(input instanceof String)) {
-            throw new IllegalArgumentException("Input must be a String");
-        }
-
         String str = (String) input;
         String trimmed = str.substring(1, str.length() - 1).trim(); // Убираем скобки и пробелы
 

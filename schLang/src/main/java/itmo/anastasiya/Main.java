@@ -9,11 +9,9 @@ public class Main {
                     fun x [let v]
                         let v = 1 + v;
                         print[v];
-                        if [ v != 10]
-                        [
-                            return x(v);
-                        ]
-                        return v;
+                        if [v == 3]
+                        [ return v; ]
+                        return x(v);
                     let a = 1;
                     let b = 2;
                     let c = x(a);

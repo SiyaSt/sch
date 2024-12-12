@@ -1,3 +1,5 @@
+// MemoryManager.java
+
 package itmo.anastasiya;
 
 import java.util.HashMap;
@@ -12,6 +14,7 @@ public class MemoryManager {
 
     private Object returnValue;
 
+    private static final int MAX_STACK_DEPTH = 1000;
     private static class ObjectEntry {
         Object value;
         int refCount;
@@ -45,8 +48,7 @@ public class MemoryManager {
     public void exitFunction() {
         Map<String, ObjectEntry> localMemory = callStack.pop(); // Pop before iterating
         for (String name : localMemory.keySet()) {
-            // Check if the variable exists ONLY in local scope
-            if (!globalMemory.containsKey(name)) {  //Added check
+            if (!globalMemory.containsKey(name)) {
                 ObjectEntry entry = localMemory.get(name);
                 if (entry != null) {
                     entry.refCount--;
@@ -111,7 +113,9 @@ public class MemoryManager {
     }
 
     public void enterFunction() {
-        // Создаём новую локальную область видимости
+        if (callStack.size() >= MAX_STACK_DEPTH) {
+            throw new StackOverflowError("Maximum recursion depth exceeded");
+        }
         callStack.push(new HashMap<>());
     }
 
