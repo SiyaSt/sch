@@ -6,15 +6,20 @@ public class Main {
     public static void main(String[] args) {
 
         String code = """
-                    fun x [let v]
+                    fun x [let v, let h, let arr]
                         let v = 1 + v;
+                        let h = 1 + h;
+                        let g = v + h;
                         print[v];
-                        if [v == 3]
-                        [ return v; ]
-                        return x(v);
+                        if [g > 8]
+                        [ return g; ]
+                        return b;
                     let a = 1;
-                    let b = 2;
-                    let c = x(a);
+                    let b = 1;
+                    let arr = new [10];
+                    let arr[0] = 1;
+                    let b = arr[0];
+                    let c = x(a, b, arr);
                     print[c];
                 """;
 
