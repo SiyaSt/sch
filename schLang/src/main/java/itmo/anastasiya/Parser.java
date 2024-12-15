@@ -144,7 +144,7 @@ public class Parser {
         return instructions;
     }
 
-    // Function to parse a conditional (if) block
+    // Function to parse a conditional  block
     private List<Instruction> parseConditionalStatement() {
         List<Instruction> instructions = new ArrayList<>();
         eat(Token.Type.IF);
