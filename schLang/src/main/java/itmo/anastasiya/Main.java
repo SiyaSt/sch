@@ -31,9 +31,11 @@ public class Main {
                     print[d];
                     let t = arr[1];
                
-                    loop [ a < 3 ]
+                    loop [ a < 4 ]
                     [ print [a];
                       let a = a + 1;
+                      if [ a == 2 ]
+                      [ print [a];]
                     ]
                     
                     print[arr];

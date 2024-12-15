@@ -354,6 +354,8 @@ public class Parser {
             instructions.add(parseFunctionDeclaration());
         } else if (currentToken().type == Token.Type.RETURN) {
             instructions.add(parseReturnStatement());
+        } else if (currentToken().type == Token.Type.IF) {
+            instructions.addAll(parseConditionalStatement());
         }  else {
             throw new RuntimeException("Unknown statement: " + currentToken());
         }

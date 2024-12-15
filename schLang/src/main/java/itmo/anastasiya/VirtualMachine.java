@@ -126,7 +126,14 @@ public class VirtualMachine {
                     }
 
                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
-                } else {
+                } else if (nestedOpCode == Instruction.OpCode.IF || nestedOpCode == Instruction.OpCode.LOOP) {
+                    String operand1 = in.readUTF();
+                    String operand2 = in.readUTF();
+                    String operand3 = in.readUTF();
+                    List<Instruction> nestedBlock = readNestedBlock(in);
+                    block.add(new Instruction(nestedOpCode, operand1, operand2, operand3, nestedBlock));
+
+                }  else {
                     String nestedOperand1 = in.readUTF();
                     String nestedOperand2 = in.readUTF();
                     String nestedOperand3 = in.readUTF();
