@@ -11,17 +11,32 @@ public class Main {
                         let h = 1 + h;
                         let g = v + h;
                         let k = arr[0];
+                        let arr[1] = 2;
                         print[k];
                         if [g > 8]
                         [ return g; ]
-                        return h;
+                        return arr;
+
+                
                     let a = 1;
                     let b = 1;
+                   
                     let arr = new [10];
                     let arr[0] = 1;
+         
                     let b = arr[0];
                     let c = x(a, b, arr);
-                    print[c];
+                    let i = 1;
+                    let d = c[i];
+                    print[d];
+                    let t = arr[1];
+               
+                    loop [ a < 3 ]
+                    [ print [a];
+                      let a = a + 1;
+                    ]
+                    
+                    print[arr];
                 """;
 
         // Лексер
