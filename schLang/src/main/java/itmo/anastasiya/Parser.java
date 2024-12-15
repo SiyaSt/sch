@@ -49,7 +49,6 @@ public class Parser {
 
             if (currentToken().type == Token.Type.LEFT_BRACKET) {
                 eat(Token.Type.LEFT_BRACKET);
-                // Изменено: Теперь индекс может быть либо NUMBER, либо IDENTIFIER
                 Object index = currentToken().value;
                 eat(currentToken().type);
                 eat(Token.Type.RIGHT_BRACKET);
@@ -110,13 +109,13 @@ public class Parser {
     private List<Instruction> parseArrayAssignment(String varName) {
         List<Instruction> instructions = new ArrayList<>();
         eat(Token.Type.LEFT_BRACKET);
-        // Изменено: Теперь индекс может быть либо NUMBER, либо IDENTIFIER
         Object index = currentToken().value;
         eat(currentToken().type);
         eat(Token.Type.RIGHT_BRACKET);
         eat(Token.Type.EQUAL);
-        String value = currentToken().value;
-        eat(Token.Type.NUMBER);
+        // Изменено: значение может быть NUMBER или IDENTIFIER
+        Object value = currentToken().value;
+        eat(currentToken().type);
         instructions.add(new Instruction(Instruction.OpCode.WRITE_INDEX, varName, index, value));
         eat(Token.Type.SEMICOLON);
         return instructions;
@@ -130,7 +129,6 @@ public class Parser {
         eat(Token.Type.IDENTIFIER);
         if (currentToken().type == Token.Type.LEFT_BRACKET) {
             eat(Token.Type.LEFT_BRACKET);
-            // Изменено: Теперь индекс может быть либо NUMBER, либо IDENTIFIER
             String index = currentToken().value;
             eat(currentToken().type);
             eat(Token.Type.RIGHT_BRACKET);
@@ -331,7 +329,6 @@ public class Parser {
             eat(Token.Type.SEMICOLON);
             return new Instruction(Instruction.OpCode.RETURN, null, instruction);
         }
-
         eat(Token.Type.SEMICOLON);
         return new Instruction(Instruction.OpCode.RETURN, returnValue);
     }
