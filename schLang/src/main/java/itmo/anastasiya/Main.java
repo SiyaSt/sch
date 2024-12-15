@@ -39,6 +39,22 @@ public class Main {
                     print[arr];
                 """;
 
+
+        String task1 = """
+                  let name = 1;
+                  fun x[let a]
+                     if [a < 2] [
+                         return name;
+                     ]
+                     let b = a - 1;
+                     let tmpa = x(b);
+                     let tmp = a * tmpa;
+                     return tmp;
+                  let a = 10;
+                  let result = x(a);
+                  print[result];
+                """;
+
         // Лексер
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.tokenize();
