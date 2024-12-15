@@ -52,8 +52,8 @@ public class Parser {
                 Object index = currentToken().value;
                 eat(currentToken().type);
                 eat(Token.Type.RIGHT_BRACKET);
-                instructions.add(new Instruction(Instruction.OpCode.STORE_ARRAY_VAR, (String)operand1, index, varName));
-            }else if (currentToken().type == Token.Type.PLUS) {
+                instructions.add(new Instruction(Instruction.OpCode.STORE_ARRAY_VAR, (String) operand1, index, varName));
+            } else if (currentToken().type == Token.Type.PLUS) {
                 eat(Token.Type.PLUS);
                 Object operand2 = parseOperand();
                 instructions.add(new Instruction(Instruction.OpCode.ADD, varName, operand1, operand2));
@@ -95,7 +95,7 @@ public class Parser {
                 }
                 eat(Token.Type.CALL_FUN_CLOSE);
                 instructions.add(new Instruction(Instruction.OpCode.CALL, functionName, arguments, varName));
-            }else {
+            } else {
                 instructions.add(new Instruction(Instruction.OpCode.STORE, varName, operand1));
             }
         } else {
@@ -105,6 +105,7 @@ public class Parser {
         eat(Token.Type.SEMICOLON);
         return instructions;
     }
+
     // Function to parse a single assignment with array index
     private List<Instruction> parseArrayAssignment(String varName) {
         List<Instruction> instructions = new ArrayList<>();
@@ -120,6 +121,7 @@ public class Parser {
         eat(Token.Type.SEMICOLON);
         return instructions;
     }
+
     // Function to parse a print statement
     private List<Instruction> parsePrintStatement() {
         List<Instruction> instructions = new ArrayList<>();
@@ -235,7 +237,7 @@ public class Parser {
 
                 if (currentToken().type == Token.Type.LEFT_BRACKET) {
                     instructions.addAll(parseArrayAssignment(varName));
-                }else {
+                } else {
                     instructions.addAll(parseAssignment(varName));
                 }
             } else if (currentToken().type == Token.Type.PRINT) {
@@ -244,7 +246,7 @@ public class Parser {
                 instructions.addAll(parseConditionalStatement());
             } else if (currentToken().type == Token.Type.RETURN) {
                 instructions.add(parseReturnStatement());
-            }else if (currentToken().type == Token.Type.LOOP) {
+            } else if (currentToken().type == Token.Type.LOOP) {
                 instructions.addAll(parseLoopStatement());
             } else {
                 throw new RuntimeException("Unknown statement: " + currentToken());
@@ -282,12 +284,12 @@ public class Parser {
 
                 if (currentToken().type == Token.Type.LEFT_BRACKET) {
                     instructions.addAll(parseArrayAssignment(varName));
-                }else {
+                } else {
                     instructions.addAll(parseAssignment(varName));
                 }
             } else if (currentToken().type == Token.Type.PRINT) {
                 instructions.addAll(parsePrintStatement());
-            }else if (currentToken().type == Token.Type.IF) {
+            } else if (currentToken().type == Token.Type.IF) {
                 instructions.addAll(parseConditionalStatement());
             } else if (currentToken().type == Token.Type.LOOP) {
                 instructions.addAll(parseLoopStatement());
@@ -332,6 +334,7 @@ public class Parser {
         eat(Token.Type.SEMICOLON);
         return new Instruction(Instruction.OpCode.RETURN, returnValue);
     }
+
     // Method to parse a single statement
     public List<Instruction> parseSingle() {
         List<Instruction> instructions = new ArrayList<>();
@@ -342,18 +345,20 @@ public class Parser {
 
             if (currentToken().type == Token.Type.LEFT_BRACKET) {
                 instructions.addAll(parseArrayAssignment(varName));
-            }else {
+            } else {
                 instructions.addAll(parseAssignment(varName));
             }
         } else if (currentToken().type == Token.Type.PRINT) {
             instructions.addAll(parsePrintStatement());
-        }else if (currentToken().type == Token.Type.FUN) {
+        } else if (currentToken().type == Token.Type.FUN) {
             instructions.add(parseFunctionDeclaration());
         } else if (currentToken().type == Token.Type.RETURN) {
             instructions.add(parseReturnStatement());
         } else if (currentToken().type == Token.Type.IF) {
             instructions.addAll(parseConditionalStatement());
-        }  else {
+        } else if (currentToken().type == Token.Type.LOOP) {
+            instructions.addAll(parseLoopStatement());
+        } else {
             throw new RuntimeException("Unknown statement: " + currentToken());
         }
         return instructions;

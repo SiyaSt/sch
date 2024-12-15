@@ -216,14 +216,13 @@ public class VirtualMachine {
             }
             case WRITE_INDEX -> {
                 var index = getOperandValue(instruction.operand2);
-                memoryManager.setArrayElement(instruction.operand1, index, instruction.operand3);
+                var value = getOperandValue(instruction.operand3);
+                memoryManager.setArrayElement(instruction.operand1, index, value);
             }
 
             case STORE_ARRAY_VAR -> {
                 Object value = memoryManager.getArrayElement(instruction.operand1, getOperandValue(instruction.operand2));
-                if (value != null) {
-                    System.out.println(value);
-                } else {
+                if (value == null) {
                     throw new RuntimeException("Variable not found: " + instruction.operand1);
                 }
                 memoryManager.allocate((String) instruction.operand3, value);

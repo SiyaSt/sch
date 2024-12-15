@@ -50,9 +50,9 @@ public class MemoryManager {
                 ObjectEntry entry = localMemory.get(name);
                 if (entry != null) {
                     entry.refCount--;
-                    if (entry.refCount <= 0) {
+                    /*if (entry.refCount <= 0) {
                         System.out.println("Object " + name + " deallocated");
-                    }
+                    }*/
                 }
             }
         }
@@ -70,7 +70,7 @@ public class MemoryManager {
                 } else {
                     globalMemory.remove(name);
                 }
-                System.out.println("Object " + name + " deallocated");
+                //System.out.println("Object " + name + " deallocated");
             }
         } else {
             throw new RuntimeException("Variable " + name + " does not exist");
