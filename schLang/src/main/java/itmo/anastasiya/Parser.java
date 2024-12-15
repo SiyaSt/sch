@@ -331,6 +331,7 @@ public class Parser {
             eat(Token.Type.SEMICOLON);
             return new Instruction(Instruction.OpCode.RETURN, null, instruction);
         }
+
         eat(Token.Type.SEMICOLON);
         return new Instruction(Instruction.OpCode.RETURN, returnValue);
     }

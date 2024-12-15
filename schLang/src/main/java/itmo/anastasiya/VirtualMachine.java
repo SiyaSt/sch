@@ -265,8 +265,8 @@ public class VirtualMachine {
 
                 List<Instruction> functionBody = functionInstruction.block;
 
-                memoryManager.enterFunction();
                 var args = instruction.operand2;
+                List<Object> valsForAlloc = new ArrayList<>();
 
                 List<Object> arguments = parseToListOfObjects(args);
                 if (parameters.size() != arguments.size()) {
@@ -278,14 +278,17 @@ public class VirtualMachine {
 
                     if (argument instanceof String varName) {
                         valueToAllocate = memoryManager.getValue(varName);
-                        if (valueToAllocate == null){
-                            valueToAllocate = argument;
-                        }
                     } else {
                         valueToAllocate = argument;
                     }
-                    memoryManager.allocate(parameters.get(i), valueToAllocate);
+                    valsForAlloc.add(valueToAllocate);
                 }
+                memoryManager.enterFunction();
+
+                for (int i = 0; i < parameters.size(); i++) {
+                    memoryManager.allocate(parameters.get(i), valsForAlloc.get(i));
+                }
+
                 run(functionBody);
 
                 Object returnValue = memoryManager.getReturnValue();
