@@ -6,18 +6,37 @@ public class Main {
     public static void main(String[] args) {
 
         String code = """
-                  let name = 1;
-                  fun x[let a]
-                     if [a < 2] [
-                         return name;
-                     ]
-                     let b = a - 1;
-                     let tmpa = x(b);
-                     let tmp = a * tmpa;
-                     return tmp;
-                  let a = 10;
-                  let result = x(a);
-                  print[result];
+                    fun x [let v, let h, let arr]
+                        let v = 1 + v;
+                        let h = 1 + h;
+                        let g = v + h;
+                        let k = arr[0];
+                        let arr[1] = 2;
+                        print[k];
+                        if [g > 8]
+                        [ return g; ]
+                        return arr;
+
+                
+                    let a = 1;
+                    let b = 1;
+                   
+                    let arr = new [10];
+                    let arr[0] = 1;
+         
+                    let b = arr[0];
+                    let c = x(a, b, arr);
+                    let i = 1;
+                    let d = c[i];
+                    print[d];
+                    let t = arr[1];
+               
+                    loop [ a < 3 ]
+                    [ print [a];
+                      let a = a + 1;
+                    ]
+                    
+                    print[arr];
                 """;
 
         // Лексер

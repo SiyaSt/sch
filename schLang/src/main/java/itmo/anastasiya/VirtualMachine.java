@@ -208,11 +208,12 @@ public class VirtualMachine {
                 }
             }
             case WRITE_INDEX -> {
-                memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2), instruction.operand3);
+                var index = getOperandValue(instruction.operand2);
+                memoryManager.setArrayElement(instruction.operand1, index, instruction.operand3);
             }
 
             case STORE_ARRAY_VAR -> {
-                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2));
+                Object value = memoryManager.getArrayElement(instruction.operand1, getOperandValue(instruction.operand2));
                 if (value != null) {
                     System.out.println(value);
                 } else {
@@ -221,7 +222,7 @@ public class VirtualMachine {
                 memoryManager.allocate((String) instruction.operand3, value);
             }
             case READ_INDEX -> {
-                Object value = memoryManager.getArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2));
+                Object value = memoryManager.getArrayElement(instruction.operand1, getOperandValue(instruction.operand2));
                 if (value != null) {
                     System.out.println(value);
                 } else {
