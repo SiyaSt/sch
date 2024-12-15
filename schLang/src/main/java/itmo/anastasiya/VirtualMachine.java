@@ -1,5 +1,3 @@
-// VirtualMachine.java
-
 package itmo.anastasiya;
 
 import java.io.DataInputStream;
@@ -193,7 +191,21 @@ public class VirtualMachine {
                 memoryManager.allocate(instruction.operand1, result);
             }
             case NEW -> {
-                memoryManager.allocateArray(instruction.operand1, Integer.parseInt((String) instruction.operand2));
+                Object size = instruction.operand2;
+
+                if (size instanceof String strSize) {
+                    try {
+                        int arraySize = Integer.parseInt(strSize);
+                        memoryManager.allocateArray(instruction.operand1, arraySize);
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException("Invalid array size: " + strSize, e);
+                    }
+                } else if (size instanceof  List) {
+                    List<?> array = (List<?>) size;
+                    memoryManager.allocateArray(instruction.operand1, array.toArray());
+                }else {
+                    throw new RuntimeException("Invalid array size: " + size);
+                }
             }
             case WRITE_INDEX -> {
                 memoryManager.setArrayElement(instruction.operand1, Integer.parseInt((String) instruction.operand2), instruction.operand3);
@@ -260,9 +272,19 @@ public class VirtualMachine {
                     throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                 }
                 for (int i = 0; i < parameters.size(); i++) {
-                    memoryManager.allocate(parameters.get(i), getOperandValue(arguments.get(i)));
-                }
+                    Object argument = arguments.get(i);
+                    Object valueToAllocate;
 
+                    if (argument instanceof String varName) {
+                        valueToAllocate = memoryManager.getValue(varName);
+                        if (valueToAllocate == null){
+                            valueToAllocate = argument;
+                        }
+                    } else {
+                        valueToAllocate = argument;
+                    }
+                    memoryManager.allocate(parameters.get(i), valueToAllocate);
+                }
                 run(functionBody);
 
                 Object returnValue = memoryManager.getReturnValue();
@@ -293,9 +315,21 @@ public class VirtualMachine {
                     if (parameters.size() != arguments.size()) {
                         throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                     }
+
                     List<Object> operandValues = new ArrayList<>();
                     for (int i = 0; i < parameters.size(); i++) {
-                        operandValues.add(getOperandValue(arguments.get(i)));
+                        Object argument = arguments.get(i);
+                        Object valueToAllocate;
+
+                        if (argument instanceof String varName) {
+                            valueToAllocate = memoryManager.getValue(varName);
+                            if(valueToAllocate == null){
+                                valueToAllocate = argument;
+                            }
+                        } else {
+                            valueToAllocate = argument;
+                        }
+                        operandValues.add(valueToAllocate);
                     }
 
                     memoryManager.enterFunction();
@@ -373,12 +407,15 @@ public class VirtualMachine {
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
                 }
+            } else if (value instanceof Object[]){
+                throw new RuntimeException("Variable " + varName + " is an array, not an Integer: " + value);
             }
             throw new RuntimeException("Variable " + varName + " has unsupported type: " + value.getClass());
         } else {
             throw new RuntimeException("Invalid operand type: " + operand);
         }
     }
+
 
     public static List<Object> parseToListOfObjects(Object input) {
         String str = (String) input;
@@ -392,7 +429,28 @@ public class VirtualMachine {
         String[] items = trimmed.split(",");
         List<Object> result = new ArrayList<>();
         for (String item : items) {
-            result.add(item.trim()); // Добавляем элементы без пробелов
+            String trimmedItem = item.trim();
+            if (trimmedItem.startsWith("[") && trimmedItem.endsWith("]")) {
+                // Handle array parameters
+                String arrayContent = trimmedItem.substring(1, trimmedItem.length() - 1);
+                String[] arrayItems = arrayContent.split(",");
+                Object[] objectArray = new Object[arrayItems.length];
+                for (int i = 0; i < arrayItems.length; i++) {
+                    String arrayItem = arrayItems[i].trim();
+                    try {
+                        objectArray[i] = Integer.parseInt(arrayItem); // Assume array elements are integers
+                    }catch (NumberFormatException e) {
+                        objectArray[i] = arrayItem; //if element is not integer
+                    }
+                }
+                result.add(objectArray);
+            } else {
+                try {
+                    result.add(Integer.parseInt(trimmedItem)); // Assume it's an integer
+                } catch (NumberFormatException e) {
+                    result.add(trimmedItem); // If not an integer, treat as a String
+                }
+            }
         }
         return result;
     }

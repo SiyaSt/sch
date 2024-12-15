@@ -10,10 +10,11 @@ public class Main {
                         let v = 1 + v;
                         let h = 1 + h;
                         let g = v + h;
-                        print[v];
+                        let k = arr[0];
+                        print[k];
                         if [g > 8]
                         [ return g; ]
-                        return b;
+                        return h;
                     let a = 1;
                     let b = 1;
                     let arr = new [10];

@@ -1,5 +1,3 @@
-// MemoryManager.java
-
 package itmo.anastasiya;
 
 import java.util.HashMap;
@@ -152,5 +150,8 @@ public class MemoryManager {
             return callStack.peek().get(name);
         }
         return globalMemory.get(name);
+    }
+    public void allocateArray(String name, Object[] array) {
+        allocate(name, array);
     }
 }
