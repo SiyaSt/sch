@@ -13,6 +13,8 @@ public class VirtualMachine {
     private final Map<String, Instruction> functions = new HashMap<>();
     private boolean isReturning = false;
 
+    private Map<String, CompiledFunction> compiledFunctions = new HashMap<String, CompiledFunction>();
+
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
             while (in.available() > 0) {
@@ -242,11 +244,7 @@ public class VirtualMachine {
                 }
             }
             case LOOP -> {
-                while (conditions(instruction)) {
-                    if (instruction.block != null) {
-                        run(instruction.block);
-                    }
-                }
+                compileLoop(instruction);
             }
             case FUN -> {
                 String functionName = instruction.operand1;
@@ -259,8 +257,10 @@ public class VirtualMachine {
                         Instruction.OpCode.FUN, functionName, parameters, functionBody
                 );
                 functions.put(functionName, functionInstruction);
+                //compileFunction(instruction);
             }
             case CALL -> {
+
                 String functionName = instruction.operand1;
                 Instruction functionInstruction = functions.get(functionName);
                 if (functionInstruction == null) {
@@ -463,5 +463,36 @@ public class VirtualMachine {
             }
         }
         return result;
+    }
+
+    private void compileLoop(Instruction instruction) {
+        if (compiledFunctions.containsKey(instruction.toString())) {
+            CompiledFunction compiled = compiledFunctions.get(instruction.toString());
+            compiled.execute();
+        } else {
+            // Генерация нативного кода для цикла
+            CompiledFunction compiled = new CompiledFunction(() -> {
+                while (conditions(instruction)) {
+                    if (instruction.block != null) {
+                        run(instruction.block);
+                    }
+                }
+            });
+            compiledFunctions.put(instruction.toString(), compiled);
+            compiled.execute();
+        }
+    }
+
+
+    private static class CompiledFunction {
+        private final Runnable runnable;
+
+        public CompiledFunction(Runnable runnable) {
+            this.runnable = runnable;
+        }
+
+        public void execute() {
+            runnable.run();
+        }
     }
 }
