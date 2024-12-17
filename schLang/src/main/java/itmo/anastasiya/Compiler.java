@@ -3,10 +3,8 @@ package itmo.anastasiya;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Compiler {
     private final List<Instruction> instructions;
@@ -14,13 +12,18 @@ public class Compiler {
     private final Map<String, Integer> variableIndexes = new HashMap<>();
     private int nextVariableIndex = 0;
 
+    private final Set<String> usedVariables = new HashSet<>();
+
     public Compiler(List<Instruction> instructions) {
         this.instructions = instructions;
     }
 
     public void saveToFile(String filename) {
         try (DataOutputStream out = new DataOutputStream(new FileOutputStream(filename))) {
-            List<Instruction> optimizedInstructions = optimizeInstructions(preprocessInstructions(instructions));
+            List<Instruction> filteredInstructions = filterDeadCode(preprocessInstructions(instructions));
+            List<Instruction> optimizedInstructions = optimizeInstructions(filteredInstructions);
+
+
             for (Instruction instr : optimizedInstructions) {
                 writeInstruction(out, instr);
             }
@@ -98,6 +101,7 @@ public class Compiler {
         return preprocessedInstructions;
     }
 
+
     private int getVariableIndex(String variableName) {
         return variableIndexes.computeIfAbsent(variableName, k -> nextVariableIndex++);
     }
@@ -136,6 +140,104 @@ public class Compiler {
             }
         }
         return optimizedInstructions;
+    }
+
+    private List<Instruction> filterDeadCode(List<Instruction> instructions) {
+        List<Instruction> optimizedInstructions = new ArrayList<>();
+        usedVariables.clear();
+
+        for (int i = instructions.size() - 1; i >= 0; i--) {
+            Instruction instruction = instructions.get(i);
+
+            switch (instruction.opCode) {
+                case PRINT -> {
+                    usedVariables.add(instruction.operand1);
+                    optimizedInstructions.add(instruction);
+                }
+                case ADD, SUB, MUL, MOD -> {
+                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
+                        addUsedVariable(instruction.operand2);
+                        addUsedVariable(instruction.operand3);
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case LESS, GREATER, EQUALS, NOT_EQUALS -> {
+                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
+                        addUsedVariable(instruction.operand2);
+                        addUsedVariable(instruction.operand3);
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case STORE -> {
+                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
+                        addUsedVariable(instruction.operand2);
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case IF -> {
+                    // Для IF анализируем условие и вложенные блоки
+                    addUsedVariable(instruction.operand1);
+                    addUsedVariable(instruction.operand3);
+                    if (instruction.block != null) {
+                        instruction.block = filterDeadCode(instruction.block).stream().collect(Collectors.toList());
+                        Collections.reverse(instruction.block);
+                    }
+                    optimizedInstructions.add(instruction);
+                }
+                case LOOP -> {
+                    addUsedVariable(instruction.operand1);
+                    addUsedVariable(instruction.operand3);
+                    if (instruction.block != null) {
+                        instruction.block = new ArrayList<>(filterDeadCode(instruction.block));
+                        Collections.reverse(instruction.block);
+                    }
+                    optimizedInstructions.add(instruction);
+                }
+                case CALL -> {
+                    List<Object> args = (List<Object>) instruction.operand2;
+                    for (var arg : args) {
+                        addUsedVariable(arg);
+                    }
+                    optimizedInstructions.add(instruction);
+                }
+                case STORE_ARRAY_VAR -> {
+                    if (instruction.target != null && usedVariables.contains(instruction.target)) {
+                        addUsedVariable(instruction.operand1);
+                        addUsedVariable(instruction.operand2);
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case WRITE_INDEX -> {
+                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
+                        addUsedVariable(instruction.operand2);
+                        addUsedVariable(instruction.operand3);
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                default -> {
+                    optimizedInstructions.add(instruction);
+                }
+            }
+        }
+        Collections.reverse(optimizedInstructions);
+        return optimizedInstructions;
+    }
+    private void addUsedVariable(Object operand){
+        if(operand instanceof String strOperand && !isInteger(strOperand)){
+            usedVariables.add(strOperand);
+        }
+    }
+
+    private boolean isInteger(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
 
