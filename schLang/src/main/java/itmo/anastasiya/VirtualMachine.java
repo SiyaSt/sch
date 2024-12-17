@@ -156,7 +156,8 @@ public class VirtualMachine {
     }
 
     public void run() {
-        List<Instruction> optimizedInstructions = filterDeadCode(instructions).reversed();
+        List<Instruction> optimizedInstructions = filterDeadCode(instructions);
+        Collections.reverse(optimizedInstructions);
         for (Instruction instruction : optimizedInstructions) {
             execute(instruction);
         }
@@ -198,7 +199,9 @@ public class VirtualMachine {
                         usedVariables.add(instruction.operand3.toString()); // Переменные из условия
                     }
                     if (instruction.block != null) {
-                        instruction.block = filterDeadCode(instruction.block).reversed();
+                        var optimizedBlock = filterDeadCode(instruction.block);
+                        Collections.reverse(optimizedBlock);
+                        instruction.block = optimizedBlock;
                     }
                     optimizedInstructions.add(instruction);
                 }
@@ -210,7 +213,9 @@ public class VirtualMachine {
                         usedVariables.add(instruction.operand3.toString()); // Переменные из условия
                     }
                     if (instruction.block != null) {
-                        instruction.block = filterDeadCode(instruction.block).reversed();
+                        var optimizedBlock = filterDeadCode(instruction.block);
+                        Collections.reverse(optimizedBlock);
+                        instruction.block = optimizedBlock;
                     }
                     optimizedInstructions.add(instruction);
                 }
