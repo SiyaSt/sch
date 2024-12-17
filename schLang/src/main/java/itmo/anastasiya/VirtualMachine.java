@@ -15,6 +15,9 @@ public class VirtualMachine {
 
     private Map<String, CompiledFunction> compiledFunctions = new HashMap<String, CompiledFunction>();
 
+    private final Set<String> usedVariables = new HashSet<>();
+
+
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
             while (in.available() > 0) {
@@ -135,7 +138,7 @@ public class VirtualMachine {
                     List<Instruction> nestedBlock = readNestedBlock(in);
                     block.add(new Instruction(nestedOpCode, operand1, operand2, operand3, nestedBlock));
 
-                }  else {
+                } else {
                     String nestedOperand1 = in.readUTF();
                     String nestedOperand2 = in.readUTF();
                     String nestedOperand3 = in.readUTF();
@@ -153,20 +156,96 @@ public class VirtualMachine {
     }
 
     public void run() {
-        for (Instruction instruction : instructions) {
+        List<Instruction> optimizedInstructions = filterDeadCode(instructions).reversed();
+        for (Instruction instruction : optimizedInstructions) {
             execute(instruction);
         }
     }
 
+    private List<Instruction> filterDeadCode(List<Instruction> instructions) {
+        List<Instruction> optimizedInstructions = new ArrayList<>();
+
+
+        for (int i = instructions.size() - 1; i >= 0; i--) {
+            Instruction instruction = instructions.get(i);
+
+            switch (instruction.opCode) {
+                case PRINT -> {
+                    usedVariables.add(instruction.operand1);
+                    optimizedInstructions.add(instruction);
+                }
+                case ADD, SUB, MUL, MOD -> {
+                    if (usedVariables.contains(instruction.operand1)) {
+                        usedVariables.add(instruction.operand2.toString());
+                        usedVariables.add(instruction.operand3.toString());
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case STORE -> {
+                    if (usedVariables.contains(instruction.operand1)) {
+                        if (instruction.operand2 != null) {
+                            usedVariables.add(instruction.operand2.toString());
+                        }
+                        optimizedInstructions.add(instruction);
+                    }
+                }
+                case IF -> {
+                    // Для IF анализируем условие и вложенные блоки
+                    if (instruction.operand1 != null) {
+                        usedVariables.add(instruction.operand1); // Переменные из условия
+                    }
+                    if (instruction.operand3 != null) {
+                        usedVariables.add(instruction.operand3.toString()); // Переменные из условия
+                    }
+                    if (instruction.block != null) {
+                        instruction.block = filterDeadCode(instruction.block).reversed();
+                    }
+                    optimizedInstructions.add(instruction);
+                }
+                case LOOP -> {
+                    if (instruction.operand1 != null) {
+                        usedVariables.add(instruction.operand1); // Условие цикла
+                    }
+                    if (instruction.operand3 != null) {
+                        usedVariables.add(instruction.operand3.toString()); // Переменные из условия
+                    }
+                    if (instruction.block != null) {
+                        instruction.block = filterDeadCode(instruction.block).reversed();
+                    }
+                    optimizedInstructions.add(instruction);
+                }
+                case CALL -> {
+                    List<Object> args = parseToListOfObjects(instruction.operand2);
+
+                    for (var arg : args) {
+                        if (!(arg instanceof Integer)) {
+                            usedVariables.add(arg.toString());
+                        }
+                    }
+                    optimizedInstructions.add(instruction);
+
+                }
+                default -> {
+                    optimizedInstructions.add(instruction);
+                }
+            }
+        }
+
+        return optimizedInstructions;
+    }
+
     private void execute(Instruction instruction) {
+
         switch (instruction.opCode) {
             case STORE -> {
                 memoryManager.allocate(instruction.operand1, instruction.operand2);
+
             }
             case PRINT -> {
                 Object value = memoryManager.getValue(instruction.operand1);
                 if (value != null) {
                     System.out.println(value);
+
                 } else {
                     throw new RuntimeException("Variable not found: " + instruction.operand1);
                 }
@@ -174,18 +253,22 @@ public class VirtualMachine {
             case ADD -> {
                 int result = getOperandValue(instruction.operand2) + getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);
+
             }
             case SUB -> {
                 int result = getOperandValue(instruction.operand2) - getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);
+
             }
             case MUL -> {
                 int result = getOperandValue(instruction.operand2) * getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);
+
             }
             case MOD -> {
                 int result = getOperandValue(instruction.operand2) % getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);
+
             }
             case LESS -> {
                 boolean result = getOperandValue(instruction.operand2) < getOperandValue(instruction.operand3);
@@ -213,10 +296,10 @@ public class VirtualMachine {
                     } catch (NumberFormatException e) {
                         throw new RuntimeException("Invalid array size: " + strSize, e);
                     }
-                } else if (size instanceof  List) {
+                } else if (size instanceof List) {
                     List<?> array = (List<?>) size;
                     memoryManager.allocateArray(instruction.operand1, array.toArray());
-                }else {
+                } else {
                     throw new RuntimeException("Invalid array size: " + size);
                 }
             }
@@ -337,7 +420,7 @@ public class VirtualMachine {
 
                         if (argument instanceof String varName) {
                             valueToAllocate = memoryManager.getValue(varName);
-                            if(valueToAllocate == null){
+                            if (valueToAllocate == null) {
                                 valueToAllocate = argument;
                             }
                         } else {
@@ -373,6 +456,8 @@ public class VirtualMachine {
             }
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
+
+
     }
 
     public void run(List<Instruction> block) {
@@ -421,7 +506,7 @@ public class VirtualMachine {
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
                 }
-            } else if (value instanceof Object[]){
+            } else if (value instanceof Object[]) {
                 throw new RuntimeException("Variable " + varName + " is an array, not an Integer: " + value);
             }
             throw new RuntimeException("Variable " + varName + " has unsupported type: " + value.getClass());
@@ -453,7 +538,7 @@ public class VirtualMachine {
                     String arrayItem = arrayItems[i].trim();
                     try {
                         objectArray[i] = Integer.parseInt(arrayItem); // Assume array elements are integers
-                    }catch (NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         objectArray[i] = arrayItem; //if element is not integer
                     }
                 }
