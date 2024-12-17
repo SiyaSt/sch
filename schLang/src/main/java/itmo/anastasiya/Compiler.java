@@ -11,18 +11,16 @@ import java.util.HashMap;
 public class Compiler {
     private final List<Instruction> instructions;
     private final Map<String, Instruction> functions = new HashMap<>();
-    private final Map<String, Integer> variableIndexes = new HashMap<>(); // Map to store variable indexes
+    private final Map<String, Integer> variableIndexes = new HashMap<>();
     private int nextVariableIndex = 0;
 
     public Compiler(List<Instruction> instructions) {
         this.instructions = instructions;
     }
 
-
     public void saveToFile(String filename) {
         try (DataOutputStream out = new DataOutputStream(new FileOutputStream(filename))) {
-
-            List<Instruction> optimizedInstructions = preprocessInstructions(instructions);
+            List<Instruction> optimizedInstructions = optimizeInstructions(preprocessInstructions(instructions));
             for (Instruction instr : optimizedInstructions) {
                 writeInstruction(out, instr);
             }
@@ -60,29 +58,22 @@ public class Compiler {
                 }
                 case STORE -> {
                     instruction.target =  instruction.operand1;
-
                     preprocessedInstructions.add(instruction);
-
                 }
                 case PRINT -> {
-
                     preprocessedInstructions.add(instruction);
                 }
                 case ADD, SUB, MUL, MOD -> {
                     instruction.target =  instruction.operand1;
-
                     preprocessedInstructions.add(instruction);
                 }
                 case LESS, GREATER, EQUALS, NOT_EQUALS -> {
                     instruction.target =  instruction.operand1;
                     preprocessedInstructions.add(instruction);
-
                 }
                 case NEW -> {
                     instruction.target =  instruction.operand1;
-
                     preprocessedInstructions.add(instruction);
-
                 }
                 case WRITE_INDEX -> {
                     instruction.target =  instruction.operand1;
@@ -103,7 +94,6 @@ public class Compiler {
                 }
                 default -> preprocessedInstructions.add(instruction);
             }
-
         }
         return preprocessedInstructions;
     }
@@ -121,6 +111,33 @@ public class Compiler {
                 loopInstruction.block
         );
     }
+
+    private List<Instruction> optimizeInstructions(List<Instruction> instructions) {
+        List<Instruction> optimizedInstructions = new ArrayList<>();
+        for (int i = 0; i < instructions.size(); i++) {
+            Instruction current = instructions.get(i);
+
+            if (i + 1 < instructions.size()) {
+                Instruction next = instructions.get(i + 1);
+
+                //  устранение избыточных STORE
+                if (current.opCode == Instruction.OpCode.STORE &&
+                        next.opCode == Instruction.OpCode.STORE &&
+                        current.target.equals(next.operand1) &&
+                        next.operand2.equals(next.operand1) ) {
+                    optimizedInstructions.add(current);
+                    i++; // Пропускаем next инструкцию
+                }
+                else {
+                    optimizedInstructions.add(current);
+                }
+            } else {
+                optimizedInstructions.add(current);
+            }
+        }
+        return optimizedInstructions;
+    }
+
 
     private void writeInstruction(DataOutputStream out, Instruction instr) throws IOException {
         out.writeByte(instr.opCode.ordinal()); // Пишем код операции
@@ -183,7 +200,5 @@ public class Compiler {
                 out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : "");
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
         }
-
     }
-
 }

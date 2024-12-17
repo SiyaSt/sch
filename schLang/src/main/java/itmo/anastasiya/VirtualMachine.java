@@ -19,7 +19,6 @@ public class VirtualMachine {
                 int opCodeOrdinal = in.readByte(); // Считываем код операции
                 Instruction.OpCode opCode = Instruction.OpCode.values()[opCodeOrdinal];
 
-
                 switch (opCode) {
                     case FUN -> {
                         String functionName = in.readUTF();
@@ -423,8 +422,6 @@ public class VirtualMachine {
             }
             default -> throw new RuntimeException("Unknown instruction: " + instruction.opCode);
         }
-
-
     }
 
     public void run(List<Instruction> block) {
@@ -481,7 +478,6 @@ public class VirtualMachine {
             throw new RuntimeException("Invalid operand type: " + operand);
         }
     }
-
 
     public static List<Object> parseToListOfObjects(Object input) {
         String str = (String) input;
