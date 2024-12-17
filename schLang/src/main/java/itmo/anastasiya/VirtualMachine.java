@@ -183,6 +183,10 @@ public class VirtualMachine {
                 int result = getOperandValue(instruction.operand2) * getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);
             }
+            case MOD -> {
+                int result = getOperandValue(instruction.operand2) % getOperandValue(instruction.operand3);
+                memoryManager.allocate(instruction.operand1, result);
+            }
             case LESS -> {
                 boolean result = getOperandValue(instruction.operand2) < getOperandValue(instruction.operand3);
                 memoryManager.allocate(instruction.operand1, result);

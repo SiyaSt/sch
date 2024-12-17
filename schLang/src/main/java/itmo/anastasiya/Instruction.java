@@ -5,7 +5,7 @@ import java.util.List;
 public class Instruction {
     public enum OpCode {
         STORE, PRINT, ARRAY, ADD, SUB, MUL, LESS, GREATER, EQUALS, NOT_EQUALS, IF, LOOP, FUN, RETURN, NEW, READ_INDEX,
-        WRITE_INDEX, STORE_ARRAY_VAR, CALL
+        WRITE_INDEX, STORE_ARRAY_VAR, CALL, MOD
     }
 
     public OpCode opCode;

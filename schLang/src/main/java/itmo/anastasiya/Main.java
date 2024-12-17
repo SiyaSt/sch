@@ -5,15 +5,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         var code ="""
-                fun x[let a]
-                    let name = 1;
-                    if [a < 2] [
-                        return name;
-                    ]
-                   return name;
-                let a = 10;
-                let result = x(a);
-                print[result];
+               
                 
                 """;
 

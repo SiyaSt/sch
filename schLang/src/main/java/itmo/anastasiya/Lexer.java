@@ -83,6 +83,9 @@ public class Lexer {
             } else if (currentChar == '*') {
                 tokens.add(new Token(Token.Type.STAR, "*"));
                 advance();
+            } else if (currentChar == '%') {
+                tokens.add(new Token(Token.Type.MOD, "%"));
+                advance();
             } else if (currentChar == '<') {
                 tokens.add(new Token(Token.Type.LESS, "<"));
                 advance();

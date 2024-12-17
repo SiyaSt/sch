@@ -65,6 +65,10 @@ public class Parser {
                 eat(Token.Type.STAR);
                 Object operand2 = parseOperand();
                 instructions.add(new Instruction(Instruction.OpCode.MUL, varName, operand1, operand2));
+            } else if (currentToken().type == Token.Type.MOD) {
+                eat(Token.Type.MOD);
+                Object operand2 = parseOperand();
+                instructions.add(new Instruction(Instruction.OpCode.MOD, varName, operand1, operand2));
             } else if (currentToken().type == Token.Type.LESS) {
                 eat(Token.Type.LESS);
                 Object operand2 = parseOperand();
