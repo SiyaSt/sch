@@ -13,16 +13,12 @@ public class VirtualMachine {
     private final Map<String, Instruction> functions = new HashMap<>();
     private boolean isReturning = false;
 
-    private Map<String, CompiledFunction> compiledFunctions = new HashMap<String, CompiledFunction>();
-
-    private final Set<String> usedVariables = new HashSet<>();
-
-
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
             while (in.available() > 0) {
                 int opCodeOrdinal = in.readByte(); // Считываем код операции
                 Instruction.OpCode opCode = Instruction.OpCode.values()[opCodeOrdinal];
+
 
                 switch (opCode) {
                     case FUN -> {
@@ -32,7 +28,6 @@ public class VirtualMachine {
                         for (int i = 0; i < parameterCount; i++) {
                             parameters.add(in.readUTF());
                         }
-
                         List<Instruction> block = null;
                         int blockSize = in.readInt();
                         if (blockSize > 0) {
@@ -42,7 +37,6 @@ public class VirtualMachine {
                                 Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
                                 if (nestedOpCode == Instruction.OpCode.RETURN) {
                                     String returnValue = in.readUTF();
-
                                     Instruction instruction = null;
                                     if (returnValue.isEmpty()) {
                                         nestedOpCodeOrdinal = in.readByte();
@@ -52,7 +46,6 @@ public class VirtualMachine {
                                         String nestedOperand3 = in.readUTF();
                                         instruction = new Instruction(nestedOpCode, nestedOperand1, nestedOperand2, nestedOperand3);
                                     }
-
                                     block.add(new Instruction(Instruction.OpCode.RETURN, returnValue, instruction));
                                 } else if (nestedOpCode == Instruction.OpCode.IF || nestedOpCode == Instruction.OpCode.LOOP) {
                                     String operand1 = in.readUTF();
@@ -60,7 +53,6 @@ public class VirtualMachine {
                                     String operand3 = in.readUTF();
                                     List<Instruction> nestedBlock = readNestedBlock(in);
                                     block.add(new Instruction(nestedOpCode, operand1, operand2, operand3, nestedBlock));
-
                                 } else {
                                     String nestedOperand1 = in.readUTF();
                                     String nestedOperand2 = in.readUTF();
@@ -74,9 +66,7 @@ public class VirtualMachine {
                                 }
                             }
                         }
-
                         Instruction functionInstruction = Instruction.FunctionInstruction(functionName, parameters, block);
-
                         functions.put(functionName, functionInstruction);
                         continue;
                     }
@@ -86,7 +76,6 @@ public class VirtualMachine {
                         continue;
                     }
                 }
-
                 String operand1 = in.readUTF();
                 String operand2 = in.readUTF();
                 String operand3 = in.readUTF();
@@ -103,6 +92,7 @@ public class VirtualMachine {
                         operand3,
                         block
                 ));
+
             }
         } catch (IOException e) {
             throw new RuntimeException("Error loading bytecode from file: " + e.getMessage());
@@ -138,7 +128,7 @@ public class VirtualMachine {
                     List<Instruction> nestedBlock = readNestedBlock(in);
                     block.add(new Instruction(nestedOpCode, operand1, operand2, operand3, nestedBlock));
 
-                } else {
+                }else {
                     String nestedOperand1 = in.readUTF();
                     String nestedOperand2 = in.readUTF();
                     String nestedOperand3 = in.readUTF();
@@ -149,161 +139,121 @@ public class VirtualMachine {
                             nestedOperand3
                     ));
                 }
-
             }
         }
         return block;
     }
 
     public void run() {
-        List<Instruction> optimizedInstructions = filterDeadCode(instructions);
-        Collections.reverse(optimizedInstructions);
-        for (Instruction instruction : optimizedInstructions) {
+        for (Instruction instruction : instructions) {
             execute(instruction);
         }
     }
 
-    private List<Instruction> filterDeadCode(List<Instruction> instructions) {
-        List<Instruction> optimizedInstructions = new ArrayList<>();
-
-
-        for (int i = instructions.size() - 1; i >= 0; i--) {
-            Instruction instruction = instructions.get(i);
-
-            switch (instruction.opCode) {
-                case PRINT -> {
-                    usedVariables.add(instruction.operand1);
-                    optimizedInstructions.add(instruction);
-                }
-                case ADD, SUB, MUL, MOD -> {
-                    if (usedVariables.contains(instruction.operand1)) {
-                        usedVariables.add(instruction.operand2.toString());
-                        usedVariables.add(instruction.operand3.toString());
-                        optimizedInstructions.add(instruction);
-                    }
-                }
-                case STORE -> {
-                    if (usedVariables.contains(instruction.operand1)) {
-                        if (instruction.operand2 != null) {
-                            usedVariables.add(instruction.operand2.toString());
-                        }
-                        optimizedInstructions.add(instruction);
-                    }
-                }
-                case IF -> {
-                    // Для IF анализируем условие и вложенные блоки
-                    if (instruction.operand1 != null) {
-                        usedVariables.add(instruction.operand1); // Переменные из условия
-                    }
-                    if (instruction.operand3 != null) {
-                        usedVariables.add(instruction.operand3.toString()); // Переменные из условия
-                    }
-                    if (instruction.block != null) {
-                        var optimizedBlock = filterDeadCode(instruction.block);
-                        Collections.reverse(optimizedBlock);
-                        instruction.block = optimizedBlock;
-                    }
-                    optimizedInstructions.add(instruction);
-                }
-                case LOOP -> {
-                    if (instruction.operand1 != null) {
-                        usedVariables.add(instruction.operand1); // Условие цикла
-                    }
-                    if (instruction.operand3 != null) {
-                        usedVariables.add(instruction.operand3.toString()); // Переменные из условия
-                    }
-                    if (instruction.block != null) {
-                        var optimizedBlock = filterDeadCode(instruction.block);
-                        Collections.reverse(optimizedBlock);
-                        instruction.block = optimizedBlock;
-                    }
-                    optimizedInstructions.add(instruction);
-                }
-                case CALL -> {
-                    List<Object> args = parseToListOfObjects(instruction.operand2);
-
-                    for (var arg : args) {
-                        if (!(arg instanceof Integer)) {
-                            usedVariables.add(arg.toString());
-                        }
-                    }
-                    optimizedInstructions.add(instruction);
-
-                }
-                default -> {
-                    optimizedInstructions.add(instruction);
-                }
-            }
-        }
-
-        return optimizedInstructions;
-    }
-
     private void execute(Instruction instruction) {
-
         switch (instruction.opCode) {
             case STORE -> {
-                memoryManager.allocate(instruction.operand1, instruction.operand2);
-
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, instruction.operand2);
+                } else {
+                    memoryManager.allocate(instruction.operand1, instruction.operand2);
+                }
             }
             case PRINT -> {
                 Object value = memoryManager.getValue(instruction.operand1);
                 if (value != null) {
                     System.out.println(value);
-
                 } else {
                     throw new RuntimeException("Variable not found: " + instruction.operand1);
                 }
             }
             case ADD -> {
                 int result = getOperandValue(instruction.operand2) + getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
-
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
             }
             case SUB -> {
                 int result = getOperandValue(instruction.operand2) - getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
 
             }
             case MUL -> {
                 int result = getOperandValue(instruction.operand2) * getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
 
             }
             case MOD -> {
                 int result = getOperandValue(instruction.operand2) % getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
-
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
             }
             case LESS -> {
                 boolean result = getOperandValue(instruction.operand2) < getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
             }
             case GREATER -> {
                 boolean result = getOperandValue(instruction.operand2) > getOperandValue(instruction.operand3);
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
+
             }
             case EQUALS -> {
                 boolean result = Objects.equals(getOperandValue(instruction.operand2), getOperandValue(instruction.operand3));
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
             }
             case NOT_EQUALS -> {
                 boolean result = !Objects.equals(getOperandValue(instruction.operand2), getOperandValue(instruction.operand3));
-                memoryManager.allocate(instruction.operand1, result);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
             }
             case NEW -> {
                 Object size = instruction.operand2;
-
                 if (size instanceof String strSize) {
                     try {
                         int arraySize = Integer.parseInt(strSize);
-                        memoryManager.allocateArray(instruction.operand1, arraySize);
+                        if (instruction.target != null) {
+                            memoryManager.allocateArray(instruction.target, arraySize);
+                        } else {
+                            memoryManager.allocateArray(instruction.operand1, arraySize);
+                        }
                     } catch (NumberFormatException e) {
                         throw new RuntimeException("Invalid array size: " + strSize, e);
                     }
                 } else if (size instanceof List) {
                     List<?> array = (List<?>) size;
-                    memoryManager.allocateArray(instruction.operand1, array.toArray());
+                    if (instruction.target != null) {
+                        memoryManager.allocateArray(instruction.target, array.toArray());
+                    } else {
+                        memoryManager.allocateArray(instruction.operand1, array.toArray());
+                    }
                 } else {
                     throw new RuntimeException("Invalid array size: " + size);
                 }
@@ -311,15 +261,22 @@ public class VirtualMachine {
             case WRITE_INDEX -> {
                 var index = getOperandValue(instruction.operand2);
                 var value = getOperandValue(instruction.operand3);
-                memoryManager.setArrayElement(instruction.operand1, index, value);
+                if (instruction.target != null) {
+                    memoryManager.setArrayElement(instruction.target, index, value);
+                } else {
+                    memoryManager.setArrayElement(instruction.operand1, index, value);
+                }
             }
-
             case STORE_ARRAY_VAR -> {
                 Object value = memoryManager.getArrayElement(instruction.operand1, getOperandValue(instruction.operand2));
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + instruction.operand1);
                 }
-                memoryManager.allocate((String) instruction.operand3, value);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, value);
+                } else {
+                    memoryManager.allocate((String) instruction.operand3, value);
+                }
             }
             case READ_INDEX -> {
                 Object value = memoryManager.getArrayElement(instruction.operand1, getOperandValue(instruction.operand2));
@@ -336,8 +293,13 @@ public class VirtualMachine {
                 }
             }
             case LOOP -> {
-                compileLoop(instruction);
+                while (conditions(instruction)) {
+                    if (instruction.block != null) {
+                        run(instruction.block);
+                    }
+                }
             }
+
             case FUN -> {
                 String functionName = instruction.operand1;
                 List<String> parameters = instruction.parameters;
@@ -349,10 +311,8 @@ public class VirtualMachine {
                         Instruction.OpCode.FUN, functionName, parameters, functionBody
                 );
                 functions.put(functionName, functionInstruction);
-                //compileFunction(instruction);
             }
             case CALL -> {
-
                 String functionName = instruction.operand1;
                 Instruction functionInstruction = functions.get(functionName);
                 if (functionInstruction == null) {
@@ -376,6 +336,9 @@ public class VirtualMachine {
 
                     if (argument instanceof String varName) {
                         valueToAllocate = memoryManager.getValue(varName);
+                        if (valueToAllocate == null){
+                            valueToAllocate = argument;
+                        }
                     } else {
                         valueToAllocate = argument;
                     }
@@ -455,7 +418,6 @@ public class VirtualMachine {
                 if (returnValue == null) {
                     throw new RuntimeException("Return value not found for variable: " + instruction.operand1);
                 }
-
                 memoryManager.setReturnValue(returnValue);
                 isReturning = true;
             }
@@ -557,36 +519,5 @@ public class VirtualMachine {
             }
         }
         return result;
-    }
-
-    private void compileLoop(Instruction instruction) {
-        if (compiledFunctions.containsKey(instruction.toString())) {
-            CompiledFunction compiled = compiledFunctions.get(instruction.toString());
-            compiled.execute();
-        } else {
-            // Генерация нативного кода для цикла
-            CompiledFunction compiled = new CompiledFunction(() -> {
-                while (conditions(instruction)) {
-                    if (instruction.block != null) {
-                        run(instruction.block);
-                    }
-                }
-            });
-            compiledFunctions.put(instruction.toString(), compiled);
-            compiled.execute();
-        }
-    }
-
-
-    private static class CompiledFunction {
-        private final Runnable runnable;
-
-        public CompiledFunction(Runnable runnable) {
-            this.runnable = runnable;
-        }
-
-        public void execute() {
-            runnable.run();
-        }
     }
 }
