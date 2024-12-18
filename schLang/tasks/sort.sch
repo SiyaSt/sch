@@ -71,4 +71,11 @@ let res = fillRandom(arr, size, min, max);
 let size = size - 1;
 
 let c = quickSort(arr, 0, size);
+let i = 0;
+loop [ i < size]
+[
+let curr = arr[i];
+print[curr];
+let i = i + 1;
+]
 

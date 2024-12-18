@@ -87,7 +87,7 @@ public class Parser {
                 instructions.add(new Instruction(Instruction.OpCode.NOT_EQUALS, varName, operand1, operand2));
             } else if (currentToken().type == Token.Type.CALL_FUN_OPEN) {
                 eat(Token.Type.CALL_FUN_OPEN);
-                String functionName = (String) operand1; // Используем operand1 как имя функции
+                String functionName = (String) operand1;
                 List<Object> arguments = new ArrayList<>();
                 while (currentToken().type != Token.Type.CALL_FUN_CLOSE) {
                     if (currentToken().type == Token.Type.NUMBER || currentToken().type == Token.Type.IDENTIFIER) {
@@ -118,7 +118,6 @@ public class Parser {
         eat(currentToken().type);
         eat(Token.Type.RIGHT_BRACKET);
         eat(Token.Type.EQUAL);
-        // Изменено: значение может быть NUMBER или IDENTIFIER
         Object value = currentToken().value;
         eat(currentToken().type);
         instructions.add(new Instruction(Instruction.OpCode.WRITE_INDEX, varName, index, value));

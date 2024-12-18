@@ -20,7 +20,7 @@ public class Compiler {
 
     public void saveToFile(String filename) {
         try (DataOutputStream out = new DataOutputStream(new FileOutputStream(filename))) {
-            List<Instruction> filteredInstructions = filterDeadCode(preprocessInstructions(instructions));
+            List<Instruction> filteredInstructions = reverseList(filterDeadCode(preprocessInstructions(instructions)));
             List<Instruction> optimizedInstructions = optimizeInstructions(filteredInstructions);
 
 
@@ -101,11 +101,6 @@ public class Compiler {
         return preprocessedInstructions;
     }
 
-
-    private int getVariableIndex(String variableName) {
-        return variableIndexes.computeIfAbsent(variableName, k -> nextVariableIndex++);
-    }
-
     private Instruction compileLoop(Instruction loopInstruction) {
         return  new Instruction(
                 Instruction.OpCode.LOOP,
@@ -144,7 +139,6 @@ public class Compiler {
 
     private List<Instruction> filterDeadCode(List<Instruction> instructions) {
         List<Instruction> optimizedInstructions = new ArrayList<>();
-        usedVariables.clear();
 
         for (int i = instructions.size() - 1; i >= 0; i--) {
             Instruction instruction = instructions.get(i);
@@ -156,15 +150,8 @@ public class Compiler {
                 }
                 case ADD, SUB, MUL, MOD -> {
                     if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
-                        addUsedVariable(instruction.operand2);
-                        addUsedVariable(instruction.operand3);
-                        optimizedInstructions.add(instruction);
-                    }
-                }
-                case LESS, GREATER, EQUALS, NOT_EQUALS -> {
-                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
-                        addUsedVariable(instruction.operand2);
-                        addUsedVariable(instruction.operand3);
+                        usedVariables.add(instruction.operand2.toString());
+                        usedVariables.add(instruction.operand3.toString());
                         optimizedInstructions.add(instruction);
                     }
                 }
@@ -176,20 +163,18 @@ public class Compiler {
                 }
                 case IF -> {
                     // Для IF анализируем условие и вложенные блоки
-                    addUsedVariable(instruction.operand1);
-                    addUsedVariable(instruction.operand3);
+                    usedVariables.add(instruction.operand1);
+                    usedVariables.add(instruction.operand3.toString());
                     if (instruction.block != null) {
-                        instruction.block = filterDeadCode(instruction.block).stream().collect(Collectors.toList());
-                        Collections.reverse(instruction.block);
+                        instruction.block = reverseList(filterDeadCode(instruction.block));
                     }
                     optimizedInstructions.add(instruction);
                 }
                 case LOOP -> {
-                    addUsedVariable(instruction.operand1);
-                    addUsedVariable(instruction.operand3);
+                    usedVariables.add(instruction.operand1);
+                    usedVariables.add(instruction.operand3.toString());
                     if (instruction.block != null) {
-                        instruction.block = new ArrayList<>(filterDeadCode(instruction.block));
-                        Collections.reverse(instruction.block);
+                        instruction.block = reverseList(filterDeadCode(instruction.block));
                     }
                     optimizedInstructions.add(instruction);
                 }
@@ -202,15 +187,8 @@ public class Compiler {
                 }
                 case STORE_ARRAY_VAR -> {
                     if (instruction.target != null && usedVariables.contains(instruction.target)) {
-                        addUsedVariable(instruction.operand1);
-                        addUsedVariable(instruction.operand2);
-                        optimizedInstructions.add(instruction);
-                    }
-                }
-                case WRITE_INDEX -> {
-                    if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
-                        addUsedVariable(instruction.operand2);
-                        addUsedVariable(instruction.operand3);
+                        usedVariables.add(instruction.operand1);
+                        usedVariables.add(instruction.operand2.toString());
                         optimizedInstructions.add(instruction);
                     }
                 }
@@ -219,7 +197,7 @@ public class Compiler {
                 }
             }
         }
-        Collections.reverse(optimizedInstructions);
+
         return optimizedInstructions;
     }
     private void addUsedVariable(Object operand){
@@ -302,5 +280,13 @@ public class Compiler {
                 out.writeUTF(instr.operand2 != null ? instr.operand2.toString() : "");
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
         }
+    }
+
+    public static List<Instruction> reverseList(List<Instruction> original) {
+        List<Instruction> reversed = new ArrayList<>();
+        for (int i = original.size() - 1; i >= 0; i--) {
+            reversed.add(original.get(i));
+        }
+        return reversed;
     }
 }
