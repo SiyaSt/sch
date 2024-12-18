@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class JWTCompiler {
+public class JITCompiler {
     private final MemoryManager memoryManager = new MemoryManager();
     // Добавляем хранение индексов локальных переменных
     private final Map<String, Integer> variableIndexes = new HashMap<>();
