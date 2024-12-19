@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Parser {
     private final List<Token> tokens;
-    private int pos;
+    private long pos;
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -14,7 +14,7 @@ public class Parser {
 
     // Function to get the current token
     private Token currentToken() {
-        return tokens.get(pos);
+        return tokens.get(Math.toIntExact(pos));
     }
 
     // Function to consume a token of a specific type

@@ -5,22 +5,22 @@ import java.util.List;
 
 public class Lexer {
     private final String input;
-    private int pos;
+    private long pos;
     private char currentChar;
 
     public Lexer(String input) {
         this.input = input;
         this.pos = 0;
-        this.currentChar = input.charAt(pos);
+        this.currentChar = input.charAt(Math.toIntExact(pos));
     }
 
     private void advance() {
         pos++;
-        currentChar = pos < input.length() ? input.charAt(pos) : '\0';
+        currentChar = pos < input.length() ? input.charAt(Math.toIntExact(pos)) : '\0';
     }
 
     private char peekNext() {
-        return pos + 1 < input.length() ? input.charAt(pos + 1) : '\0';
+        return pos + 1 < input.length() ? input.charAt(Math.toIntExact(pos + 1)) : '\0';
     }
 
     private void skipWhitespace() {

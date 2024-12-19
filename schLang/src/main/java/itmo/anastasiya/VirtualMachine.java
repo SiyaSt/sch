@@ -16,30 +16,30 @@ public class VirtualMachine {
     public void loadFromFile(String filename) {
         try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
             while (in.available() > 0) {
-                int opCodeOrdinal = in.readByte(); // Считываем код операции
-                Instruction.OpCode opCode = Instruction.OpCode.values()[opCodeOrdinal];
+                long opCodeOrdinal = in.readByte(); // Считываем код операции
+                Instruction.OpCode opCode = Instruction.OpCode.values()[Math.toIntExact(opCodeOrdinal)];
 
                 switch (opCode) {
                     case FUN -> {
                         String functionName = in.readUTF();
-                        int parameterCount = in.readInt();
+                        long parameterCount = in.readLong();
                         List<String> parameters = new ArrayList<>();
-                        for (int i = 0; i < parameterCount; i++) {
+                        for (long i = 0; i < parameterCount; i++) {
                             parameters.add(in.readUTF());
                         }
                         List<Instruction> block = null;
-                        int blockSize = in.readInt();
+                        long blockSize = in.readLong();
                         if (blockSize > 0) {
                             block = new ArrayList<>();
-                            for (int i = 0; i < blockSize; i++) {
-                                int nestedOpCodeOrdinal = in.readByte();
-                                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                            for (long i = 0; i < blockSize; i++) {
+                                long nestedOpCodeOrdinal = in.readByte();
+                                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[Math.toIntExact(nestedOpCodeOrdinal)];
                                 if (nestedOpCode == Instruction.OpCode.RETURN) {
                                     String returnValue = in.readUTF();
                                     Instruction instruction = null;
                                     if (returnValue.isEmpty()) {
                                         nestedOpCodeOrdinal = in.readByte();
-                                        nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                                        nestedOpCode = Instruction.OpCode.values()[Math.toIntExact(nestedOpCodeOrdinal)];
                                         String nestedOperand1 = in.readUTF();
                                         String nestedOperand2 = in.readUTF();
                                         String nestedOperand3 = in.readUTF();
@@ -100,19 +100,19 @@ public class VirtualMachine {
 
     public List<Instruction> readNestedBlock(DataInputStream in) throws IOException {
         List<Instruction> block = new ArrayList<>();
-        int blockSize = in.readInt();
+        long blockSize = in.readLong();
         if (blockSize > 0) {
             block = new ArrayList<>();
-            for (int i = 0; i < blockSize; i++) {
-                int nestedOpCodeOrdinal = in.readByte();
-                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+            for (long i = 0; i < blockSize; i++) {
+                long nestedOpCodeOrdinal = in.readByte();
+                Instruction.OpCode nestedOpCode = Instruction.OpCode.values()[Math.toIntExact(nestedOpCodeOrdinal)];
                 if (nestedOpCode == Instruction.OpCode.RETURN) {
                     String returnValue = in.readUTF();
 
                     Instruction instruction = null;
                     if (returnValue.isEmpty()) {
                         nestedOpCodeOrdinal = in.readByte();
-                        nestedOpCode = Instruction.OpCode.values()[nestedOpCodeOrdinal];
+                        nestedOpCode = Instruction.OpCode.values()[Math.toIntExact(nestedOpCodeOrdinal)];
                         String nestedOperand1 = in.readUTF();
                         String nestedOperand2 = in.readUTF();
                         String nestedOperand3 = in.readUTF();
@@ -167,7 +167,7 @@ public class VirtualMachine {
                 }
             }
             case ADD -> {
-                int result = getOperandValue(instruction.operand2) + getOperandValue(instruction.operand3);
+                long result = getOperandValue(instruction.operand2) + getOperandValue(instruction.operand3);
                 if (instruction.target != null){
                     memoryManager.allocate(instruction.target, result);
                 } else {
@@ -175,7 +175,7 @@ public class VirtualMachine {
                 }
             }
             case SUB -> {
-                int result = getOperandValue(instruction.operand2) - getOperandValue(instruction.operand3);
+                long result = getOperandValue(instruction.operand2) - getOperandValue(instruction.operand3);
                 if (instruction.target != null){
                     memoryManager.allocate(instruction.target, result);
                 } else {
@@ -184,7 +184,7 @@ public class VirtualMachine {
 
             }
             case MUL -> {
-                int result = getOperandValue(instruction.operand2) * getOperandValue(instruction.operand3);
+                long result = getOperandValue(instruction.operand2) * getOperandValue(instruction.operand3);
                 if (instruction.target != null){
                     memoryManager.allocate(instruction.target, result);
                 } else {
@@ -193,7 +193,7 @@ public class VirtualMachine {
 
             }
             case MOD -> {
-                int result = getOperandValue(instruction.operand2) % getOperandValue(instruction.operand3);
+                long result = getOperandValue(instruction.operand2) % getOperandValue(instruction.operand3);
                 if (instruction.target != null){
                     memoryManager.allocate(instruction.target, result);
                 } else {
@@ -237,7 +237,7 @@ public class VirtualMachine {
                 Object size = instruction.operand2;
                 if (size instanceof String strSize) {
                     try {
-                        int arraySize = Integer.parseInt(strSize);
+                        long arraySize = Long.parseLong(strSize);
                         if (instruction.target != null) {
                             memoryManager.allocateArray(instruction.target, arraySize);
                         } else {
@@ -329,8 +329,8 @@ public class VirtualMachine {
                 if (parameters.size() != arguments.size()) {
                     throw new RuntimeException("Function " + functionName + " expects " + parameters.size() + " arguments, but got " + arguments.size());
                 }
-                for (int i = 0; i < parameters.size(); i++) {
-                    Object argument = arguments.get(i);
+                for (long i = 0; i < parameters.size(); i++) {
+                    Object argument = arguments.get(Math.toIntExact(i));
                     Object valueToAllocate;
 
                     if (argument instanceof String varName) {
@@ -345,8 +345,8 @@ public class VirtualMachine {
                 }
                 memoryManager.enterFunction();
 
-                for (int i = 0; i < parameters.size(); i++) {
-                    memoryManager.allocate(parameters.get(i), valsForAlloc.get(i));
+                for (long i = 0; i < parameters.size(); i++) {
+                    memoryManager.allocate(parameters.get(Math.toIntExact(i)), valsForAlloc.get(Math.toIntExact(i)));
                 }
 
                 run(functionBody);
@@ -381,8 +381,8 @@ public class VirtualMachine {
                     }
 
                     List<Object> operandValues = new ArrayList<>();
-                    for (int i = 0; i < parameters.size(); i++) {
-                        Object argument = arguments.get(i);
+                    for (long i = 0; i < parameters.size(); i++) {
+                        Object argument = arguments.get(Math.toIntExact(i));
                         Object valueToAllocate;
 
                         if (argument instanceof String varName) {
@@ -397,8 +397,8 @@ public class VirtualMachine {
                     }
 
                     memoryManager.enterFunction();
-                    for (int i = 0; i < parameters.size(); i++) {
-                        memoryManager.allocate(parameters.get(i), operandValues.get(i));
+                    for (long i = 0; i < parameters.size(); i++) {
+                        memoryManager.allocate(parameters.get((int) Math.toIntExact(i)), operandValues.get((int) Math.toIntExact(i)));
                     }
                     run(functionBody);
                     Object returnValue = memoryManager.getReturnValue();
@@ -451,22 +451,22 @@ public class VirtualMachine {
         }
     }
 
-    private int getOperandValue(Object operand) {
-        if (operand instanceof Integer) {
-            return (int) operand;
+    private long getOperandValue(Object operand) {
+        if (operand instanceof Long) {
+            return (long) operand;
         } else if (operand instanceof String varName) {
             Object value = memoryManager.getValue(varName);
-            if (value instanceof Integer) {
-                return (int) value;
+            if (value instanceof Long) {
+                return (long) value;
             } else if (value instanceof String) {
                 try {
-                    return Integer.parseInt((String) value);
+                    return Long.parseLong((String) value);
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
                 }
             } else if (value == null) {
                 try {
-                    return Integer.parseInt((String) operand);
+                    return Long.parseLong((String) operand);
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("Variable " + varName + " is not a valid number: " + value);
                 }
@@ -497,18 +497,18 @@ public class VirtualMachine {
                 String arrayContent = trimmedItem.substring(1, trimmedItem.length() - 1);
                 String[] arrayItems = arrayContent.split(",");
                 Object[] objectArray = new Object[arrayItems.length];
-                for (int i = 0; i < arrayItems.length; i++) {
-                    String arrayItem = arrayItems[i].trim();
+                for (long i = 0; i < arrayItems.length; i++) {
+                    String arrayItem = arrayItems[Math.toIntExact(i)].trim();
                     try {
-                        objectArray[i] = Integer.parseInt(arrayItem); // Assume array elements are integers
+                        objectArray[Math.toIntExact(i)] = Long.parseLong(arrayItem); // Assume array elements are integers
                     } catch (NumberFormatException e) {
-                        objectArray[i] = arrayItem; //if element is not integer
+                        objectArray[Math.toIntExact(i)] = arrayItem; //if element is not integer
                     }
                 }
                 result.add(objectArray);
             } else {
                 try {
-                    result.add(Integer.parseInt(trimmedItem)); // Assume it's an integer
+                    result.add(Long.parseLong(trimmedItem)); // Assume it's an integer
                 } catch (NumberFormatException e) {
                     result.add(trimmedItem); // If not an integer, treat as a String
                 }

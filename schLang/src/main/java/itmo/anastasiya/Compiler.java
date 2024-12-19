@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 public class Compiler {
     private final List<Instruction> instructions;
     private final Map<String, Instruction> functions = new HashMap<>();
-    private final Map<String, Integer> variableIndexes = new HashMap<>();
-    private int nextVariableIndex = 0;
+    private final Map<String, Long> variableIndexes = new HashMap<>();
+    private long nextVariableIndex = 0;
 
     private final Set<String> usedVariables = new HashSet<>();
 
@@ -101,6 +101,11 @@ public class Compiler {
         return preprocessedInstructions;
     }
 
+
+    private long getVariableIndex(String variableName) {
+        return variableIndexes.computeIfAbsent(variableName, k -> nextVariableIndex++);
+    }
+
     private Instruction compileLoop(Instruction loopInstruction) {
         return  new Instruction(
                 Instruction.OpCode.LOOP,
@@ -113,11 +118,11 @@ public class Compiler {
 
     private List<Instruction> optimizeInstructions(List<Instruction> instructions) {
         List<Instruction> optimizedInstructions = new ArrayList<>();
-        for (int i = 0; i < instructions.size(); i++) {
-            Instruction current = instructions.get(i);
+        for (long i = 0; i < instructions.size(); i++) {
+            Instruction current = instructions.get(Math.toIntExact(i));
 
             if (i + 1 < instructions.size()) {
-                Instruction next = instructions.get(i + 1);
+                Instruction next = instructions.get(Math.toIntExact(i + 1));
 
                 //  устранение избыточных STORE
                 if (current.opCode == Instruction.OpCode.STORE &&
@@ -140,8 +145,8 @@ public class Compiler {
     private List<Instruction> filterDeadCode(List<Instruction> instructions) {
         List<Instruction> optimizedInstructions = new ArrayList<>();
 
-        for (int i = instructions.size() - 1; i >= 0; i--) {
-            Instruction instruction = instructions.get(i);
+        for (long i = instructions.size() - 1; i >= 0; i--) {
+            Instruction instruction = instructions.get(Math.toIntExact(i));
 
             switch (instruction.opCode) {
                 case PRINT -> {
@@ -229,11 +234,11 @@ public class Compiler {
 
                 // Запись списка параметров
                 List<String> parameters = instr.parameters;
-                out.writeInt(parameters.size());
+                out.writeLong(parameters.size());
                 for (String param : parameters) {
                     out.writeUTF(param);
                 }
-                out.writeInt(instr.block.size());
+                out.writeLong(instr.block.size());
                 for (Instruction blockInstr : instr.block) {
                     writeInstruction(out, blockInstr);
                 }
@@ -254,7 +259,7 @@ public class Compiler {
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
 
                 if (instr.block != null) {
-                    out.writeInt(instr.block.size());
+                    out.writeLong(instr.block.size());
                     for (Instruction blockInstr : instr.block) {
                         writeInstruction(out, blockInstr);
                     }
@@ -267,7 +272,7 @@ public class Compiler {
                 out.writeUTF(instr.operand3 != null ? instr.operand3.toString() : "");
 
                 if (instr.block != null) {
-                    out.writeInt(instr.block.size());
+                    out.writeLong(instr.block.size());
                     for (Instruction blockInstr : instr.block) {
                         writeInstruction(out, blockInstr);
                     }

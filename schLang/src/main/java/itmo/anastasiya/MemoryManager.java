@@ -12,10 +12,10 @@ public class MemoryManager {
 
     private Object returnValue;
 
-    private static final int MAX_STACK_DEPTH = 1000;
+    private static final long MAX_STACK_DEPTH = 1000;
     private static class ObjectEntry {
         Object value;
-        int refCount;
+        long refCount;
 
         ObjectEntry(Object value) {
             this.value = value;
@@ -82,8 +82,8 @@ public class MemoryManager {
         return (entry != null) ? entry.value : null;
     }
 
-    public void allocateArray(String name, int size) {
-        allocate(name, new Object[size]);
+    public void allocateArray(String name, long size) {
+        allocate(name, new Object[Math.toIntExact(size)]);
     }
 
     public Object[] getArray(String name) {
@@ -94,20 +94,20 @@ public class MemoryManager {
         throw new RuntimeException("Variable " + name + " is not an array");
     }
 
-    public void setArrayElement(String name, int index, Object value) {
+    public void setArrayElement(String name, long index, Object value) {
         Object[] array = getArray(name);
         if (index < 0 || index >= array.length) {
             throw new RuntimeException("Array index out of bounds: " + index);
         }
-        array[index] = value;
+        array[Math.toIntExact(index)] = value;
     }
 
-    public Object getArrayElement(String name, int index) {
+    public Object getArrayElement(String name, long index) {
         Object[] array = getArray(name);
         if (index < 0 || index >= array.length) {
             throw new RuntimeException("Array index out of bounds: " + index);
         }
-        return array[index];
+        return array[Math.toIntExact(index)];
     }
 
     public void enterFunction() {
