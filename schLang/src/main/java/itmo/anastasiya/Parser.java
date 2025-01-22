@@ -99,6 +99,10 @@ public class Parser {
                 }
                 eat(Token.Type.CALL_FUN_CLOSE);
                 instructions.add(new Instruction(Instruction.OpCode.CALL, functionName, arguments, varName));
+            } else if (currentToken().type == Token.Type.BITWISE_SHIFT) {
+                eat(Token.Type.BITWISE_SHIFT);
+                Object operand2 = parseOperand();
+                instructions.add(new Instruction(Instruction.OpCode.BITWISE_SHIFT, varName, operand1, operand2));
             } else {
                 instructions.add(new Instruction(Instruction.OpCode.STORE, varName, operand1));
             }

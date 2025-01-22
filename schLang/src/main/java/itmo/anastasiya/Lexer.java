@@ -118,6 +118,9 @@ public class Lexer {
                 } else {
                     throw new RuntimeException("Unexpected character: !");
                 }
+            } else if  (currentChar == '|') {
+                tokens.add(new Token(Token.Type.BITWISE_SHIFT, "|"));
+                advance();
             } else {
                 throw new RuntimeException("Unexpected character: " + currentChar);
             }

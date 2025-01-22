@@ -174,6 +174,14 @@ public class VirtualMachine {
                     memoryManager.allocate(instruction.operand1, result);
                 }
             }
+            case BITWISE_SHIFT -> {
+                long result = getOperandValue(instruction.operand2) << getOperandValue(instruction.operand3);
+                if (instruction.target != null){
+                    memoryManager.allocate(instruction.target, result);
+                } else {
+                    memoryManager.allocate(instruction.operand1, result);
+                }
+            }
             case SUB -> {
                 long result = getOperandValue(instruction.operand2) - getOperandValue(instruction.operand3);
                 if (instruction.target != null){
