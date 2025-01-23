@@ -230,6 +230,49 @@ public class Parser {
         return instructions;
     }
 
+    // Function to parse a nested loop
+    private List<Instruction> parseNestedLoopStatement() {
+        List<Instruction> instructions = new ArrayList<>();
+        eat(Token.Type.LOOP);
+        eat(Token.Type.LEFT_BRACKET);
+        Object conditionOperand1 = currentToken().value;
+        eat(currentToken().type);
+        Token.Type comparisonType = currentToken().type;
+        eat(comparisonType);
+        Object conditionOperand2 = currentToken().value;
+        eat(currentToken().type);
+        eat(Token.Type.RIGHT_BRACKET);
+
+        List<Instruction> blockInstructions = new ArrayList<>();
+        eat(Token.Type.LEFT_BRACKET);
+        while (currentToken().type != Token.Type.RIGHT_BRACKET) {
+            if(currentToken().type == Token.Type.LOOP){
+                blockInstructions.addAll(parseNestedLoopStatement());
+            } else{
+                blockInstructions.addAll(parseSingle());
+            }
+        }
+        eat(Token.Type.RIGHT_BRACKET);
+
+        Instruction.OpCode comparisonOpCode = switch (comparisonType) {
+            case LESS -> Instruction.OpCode.LESS;
+            case GREATER -> Instruction.OpCode.GREATER;
+            case EQUALS -> Instruction.OpCode.EQUALS;
+            case NOT_EQUALS -> Instruction.OpCode.NOT_EQUALS;
+            default -> throw new RuntimeException("Unsupported comparison operator: " + comparisonType);
+        };
+
+        instructions.add(new Instruction(
+                Instruction.OpCode.LOOP,
+                conditionOperand1.toString(),
+                comparisonOpCode,
+                conditionOperand2,
+                blockInstructions
+        ));
+        return instructions;
+    }
+
+
     // основной метод парсинга
     public List<Instruction> parse() {
         List<Instruction> instructions = new ArrayList<>();

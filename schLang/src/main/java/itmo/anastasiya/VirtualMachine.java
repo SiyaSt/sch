@@ -303,6 +303,8 @@ public class VirtualMachine {
                 while (conditions(instruction)) {
                     if (instruction.block != null) {
                         run(instruction.block);
+                    } else {
+                        throw new RuntimeException("Loop without body");
                     }
                 }
             }
