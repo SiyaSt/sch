@@ -1,24 +1,31 @@
-
-fun itemCheck[let tree, let index]
-    let left = 2 * index + 1;
-    let right = 2 * index + 2;
-    if [left > tree.length - 1] {
-        return tree[index];
-    if [right > tree.length - 1] [
-      return tree[index];
-    ]
-    if [tree[left] == 0] [
-        if [ tree[right] == 0] [
-              return tree[index];
-        ]
-    ] else [
-        let result = tree[index];
-        let checkL = itemCheck[tree, left];
-        result = result + checkL;
-        let checkR = itemCheck[tree, right];
-        result = result - checkR;
-        return result;
-    ]
+fun itemCheck[let tree, let index, let maxSize]
+            let left = 2 * index;
+            let left = left + 1;
+            let right = 2 * index;
+            let right = right + 2;
+            let maxSize = maxSize - 1;
+            if [left > maxSize] [
+                let a = tree[index];
+                return a;
+            ]
+            if [right > maxSize] [
+                let a = tree[index];
+                return a;
+            ]
+            let treeLeft = tree[left];
+            if [treeLeft == 0] [
+                let b = tree[right];
+                if [b == 0] [
+                      let c = tree[index];
+                      return c;
+                ]
+            ]
+            let result = tree[index];
+            let checkL = itemCheck(tree, left);
+            let result = result + checkL;
+            let checkR = itemCheck(tree, right);
+            let result = result - checkR;
+            return result;
 
 
 fun bottomUpTree[let item, let depth]
