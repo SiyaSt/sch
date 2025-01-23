@@ -66,7 +66,7 @@ public class Compiler {
                 case PRINT -> {
                     preprocessedInstructions.add(instruction);
                 }
-                case ADD, SUB, MUL, MOD -> {
+                case ADD, SUB, MUL, MOD, BITWISE_SHIFT -> {
                     instruction.target =  instruction.operand1;
                     preprocessedInstructions.add(instruction);
                 }
@@ -153,7 +153,7 @@ public class Compiler {
                     usedVariables.add(instruction.operand1);
                     optimizedInstructions.add(instruction);
                 }
-                case ADD, SUB, MUL, MOD -> {
+                case ADD, SUB, MUL, MOD, BITWISE_SHIFT-> {
                     if (instruction.target != null && usedVariables.contains(instruction.target) || usedVariables.contains(instruction.operand1)) {
                         usedVariables.add(instruction.operand2.toString());
                         usedVariables.add(instruction.operand3.toString());
